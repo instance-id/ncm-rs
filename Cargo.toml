@@ -1,0 +1,19 @@
+[package]
+name = "ncm-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Neovim configuration manager written in Rust"
+repository = "https://github.com/instance-id/ncm-rs"
+authors = ["instance-id"]
+
+[dependencies]
+clap = { version = "4.1.4", features = ["derive"] }
+libc = "0.2.94"
+thiserror = "1.0.24"
+config = "0.13.1"
+glob = "0.3.1"
+serde = "1.0.152"
+serde_json = "1.0.93"
+log = "0.4"
+anyhow = "1.0.69"
+prettytable-rs = "^0.10"
