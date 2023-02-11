@@ -40,7 +40,7 @@ ncm add <name> <path> <description (optional)>
 ```
 
 Load a configuration
-(Once a configuration is loaded, you can use your normal `nvim` or custom keybindings as ususal)
+(Once a configuration is loaded, you can use your normal `$ nvim` commands or custom keybindings as ususal)
 
 ```bash
 ncm load <name>
