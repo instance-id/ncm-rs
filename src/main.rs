@@ -1,29 +1,23 @@
 mod args;
-mod conf;
 mod configs;
 mod logger;
 
 use configs::ConfigData;
 
-use clap::{arg, command, value_parser, ArgAction, Parser, Subcommand};
-use config::{Config, ConfigError, File, FileFormat};
-// use error::{Error, Result};
-use anyhow::Result;
-use glob::glob;
-
+use clap::Parser;
 use log::{debug, error, info};
 use std::env::var;
 use std::path::PathBuf;
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
+use ansi_term::Colour::RGB;
 
 use crate::args::{Commands, NvCfgArgs};
-use serde::{Deserialize, Serialize};
 
 #[macro_use]
 extern crate prettytable;
 use prettytable::{
     color,
-    format::{self, Alignment},
+    format::Alignment,
     Attr, Cell, Row, Table,
 };
 
@@ -91,16 +85,26 @@ fn main() -> anyhow::Result<()> {
             let cfgs = configs::list_configs(config_json)?;
             let current_default = format!("Current Default: {}", cfgs.configs_default);
 
+            let current_str = RGB(70, 130, 180).paint("Current Configurations");
+            println!("{}",current_str);
+            println!(""); // There is probably a better way to do this, but I don't know what it is...
+
+            let name_str = RGB(70, 130, 180).paint("Name");
+            let path_str = RGB(70, 130, 180).paint("Path");
+            let desc_str = RGB(70, 130, 180).paint("Decription");
+
             let mut table = Table::new();
-            // table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+            table.set_titles(row![b->name_str, b->path_str, b->desc_str]);
 
-            table.add_row(row!["Name", "Path", "Description"]);
-
+            table.set_format(*prettytable::format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
             for cfg in cfgs.configs {
                 table.add_row(row![cfg.name, cfg.path, cfg.description.unwrap_or("".to_string())]);
             }
 
-            table.add_row(Row::new(vec![Cell::new_align(&current_default, Alignment::CENTER).with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)).with_hspan(3)]));
+            table.add_row(Row::new(vec![Cell::new_align(&current_default, Alignment::LEFT)
+                                   .with_style(Attr::Bold)
+                                   .with_style(Attr::ForegroundColor(color::GREEN))
+                                   .with_hspan(3)]));
             table.printstd();
         }
         Commands::Load { name } => {

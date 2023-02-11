@@ -6,11 +6,11 @@ use clap::{arg, command, value_parser, Subcommand, ArgAction, Parser};
 #[clap(about = r#"Neovim Configuration Manager.
 
 EXAMPLES:
-    Set default config path /target/path to current directory
-    $ ncm -d /target/path
+    Add a new configuration directory to the configuration store
+    $ ncm add lazyvim /home/username/github/lazyvim/starter
 
-    create a symlink at ./my_path pointing to /other/path
-    $ ncm ./my_path /other/path"#)]
+    Load the newly added configuration
+    $ ncm load lazyvim"#)]
 pub struct NvCfgArgs {
     #[command(subcommand)]
     pub(crate) command: Commands,
@@ -18,14 +18,14 @@ pub struct NvCfgArgs {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Adds new config 
+    /// Adds new configuration directory, referenced by name 
     Add { name: String, path: PathBuf, description: Option<String> },
-    /// Removes files from myapp
+    /// Remove a configuration from the config store
     Remove { name: Option<String> },
-    /// Loads files from myapp
+    /// Load a configuration by name from the configuration store
     Load { name: Option<String> },
-    /// Set default config
+    /// Set default configuration in which to load if not specified
     SetDefault { name: String }, 
-    /// List current configs
+    /// List current stored configurations
     List,
 }

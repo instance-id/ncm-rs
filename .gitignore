@@ -10,3 +10,7 @@ Cargo.lock
 **/*.rs.bk
 
 .lh/
+.idea/
+.vscode/
+.project.nvim
+*.code-workspace

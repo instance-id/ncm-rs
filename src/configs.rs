@@ -16,16 +16,30 @@ pub struct ConfigData {
     pub description: Option<String>,
 }
 
+// Load a configuration file by name. If name is not specified then the default configuration is used.
 pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<ConfigData> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
 
+    let target_config: String;
     let configs: Configs = serde_json::from_str(&config_file)?;
     let config_data: Vec<ConfigData> = configs.configs;
+    let default_config = configs.configs_default.clone();
 
-    return if let Some(config) = config_data.into_iter().find(|x| x.name == config_name) { Ok(config) } else { Err(serde_json::Error::custom("No config found")) };
+    if config_name == "" {
+        target_config = default_config;
+    } else {
+        target_config = config_name.to_string();
+    }
+
+    return if let Some(config) = config_data.into_iter().find(|x| x.name == target_config) { 
+        Ok(config)
+    } 
+    else { 
+        Err(serde_json::Error::custom(format!("No configuration found with name {target_config}")))
+    };
 }
 
-// Using config_path as the json file location, and ConfigData struct as input, write the data to the json file
+// Using config_path as the json file location, and ConfigData struct as input, write the data to the json file.
 pub(crate) fn add_config(config_path: &str, config_data: ConfigData) ->  anyhow::Result<()>{
     // Load file from path 'config_path'
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
