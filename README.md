@@ -46,4 +46,8 @@ Load a configuration
 ncm load <name>
 ```
 
+<img width="800" src="https://user-images.githubusercontent.com/48368821/218245017-c2dda78f-7807-49f8-a44a-ad42d280d299.gif" />
+
+<img width="800" src="https://user-images.githubusercontent.com/48368821/218245017-c2dda78f-7807-49f8-a44a-ad42d280d299.mp4" />
+
 https://user-images.githubusercontent.com/48368821/218245017-c2dda78f-7807-49f8-a44a-ad42d280d299.mp4
