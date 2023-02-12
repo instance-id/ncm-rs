@@ -6,7 +6,7 @@ Neovim Configuration Manager (Store/Change/Swap Configurations)
 
 I created this package because I wanted to try out Lazyvim (which is why it is referencec a few times) and other similar configuration packages and plugins without having to manually move my configuration files each time. I also wanted to be able to easily switch between configurations.
 
-> **Notice**
+> **Note**
 > Tests have been added. Though, this is still to be considered a WIP.
 
 ### Notable Features (so far)
@@ -21,7 +21,7 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 
 ---
 
-> **Notice** 
+> **Warning** 
 > Make a backup!
 
 ### Make a backup of your current configuration. Always better to be safe than sorry.
