@@ -4,22 +4,18 @@ mod logger;
 
 use configs::ConfigData;
 
+use log::info;
 use clap::Parser;
-use log::{debug, error, info};
 use std::env::var;
-use std::path::PathBuf;
 use std::str::FromStr;
+use std::path::PathBuf;
 use ansi_term::Colour::RGB;
 
 use crate::args::{Commands, NvCfgArgs};
 
 #[macro_use]
 extern crate prettytable;
-use prettytable::{
-    color,
-    format::Alignment,
-    Attr, Cell, Row, Table,
-};
+use prettytable::{color, format::Alignment, Attr, Cell, Row, Table};
 
 fn main() -> anyhow::Result<()> {
     // Initialize logger
@@ -64,7 +60,10 @@ fn main() -> anyhow::Result<()> {
 
     let config_json = configs_json_path.to_str().unwrap();
     match &args.command {
+        // --| Set-Default Command ------------------------
         Commands::SetDefault { name } => configs::set_default(config_json, name)?,
+
+        // --| Add Command --------------------------------
         Commands::Add { name, path, description } => {
             info!("Adding new config: {name:?} {path:?} {description:?}");
 
@@ -78,15 +77,18 @@ fn main() -> anyhow::Result<()> {
             )?;
         }
 
+        // --| Remove Command -----------------------------
         Commands::Remove { name } => {
             configs::remove_config(config_json, &name.clone().unwrap())?;
         }
+
+        // --| List Command -------------------------------
         Commands::List => {
             let cfgs = configs::list_configs(config_json)?;
             let current_default = format!("Current Default: {}", cfgs.configs_default);
 
             let current_str = RGB(70, 130, 180).paint("Current Configurations");
-            println!("{}",current_str);
+            println!("{}", current_str);
             println!(""); // There is probably a better way to do this, but I don't know what it is...
 
             let name_str = RGB(70, 130, 180).paint("Name");
@@ -101,12 +103,11 @@ fn main() -> anyhow::Result<()> {
                 table.add_row(row![cfg.name, cfg.path, cfg.description.unwrap_or("".to_string())]);
             }
 
-            table.add_row(Row::new(vec![Cell::new_align(&current_default, Alignment::LEFT)
-                                   .with_style(Attr::Bold)
-                                   .with_style(Attr::ForegroundColor(color::GREEN))
-                                   .with_hspan(3)]));
+            table.add_row(Row::new(vec![Cell::new_align(&current_default, Alignment::LEFT).with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)).with_hspan(3)]));
             table.printstd();
         }
+
+        // --| Load Command -------------------------------
         Commands::Load { name } => {
             let cfg = configs::load_configs(config_json, &name.clone().unwrap())?;
             info!("Loading: {:?}", cfg.name);

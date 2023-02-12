@@ -2,21 +2,18 @@
 
 set positional-arguments
 
-release:
-  cargo build --release    
+lint:
+  cargo clippy
+
+test:
+  cargo test
   
 debug:
     cargo build
 
-lint:
-  cargo clippy
+release: test
+  cargo build --release    
 
-bin:
-  cargo run --bin bin -- arg1
-
-example:
-  cargo run --example exname -- arg1
-  
 run *args: debug 
     rm ./target/debug/ncm || true
     mv -f ./target/debug/ncm-rs ./target/debug/ncm || true 

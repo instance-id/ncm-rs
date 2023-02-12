@@ -1,6 +1,6 @@
 [package]
 name = "ncm-rs"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 description = "Neovim configuration manager written in Rust"
 repository = "https://github.com/instance-id/ncm-rs"
@@ -18,3 +18,7 @@ log = "0.4"
 anyhow = "1.0.69"
 prettytable-rs = "^0.10"
 ansi_term = "0.12"
+
+[dev-dependencies]
+pretty_assertions = "1.3.0"
+ctor = "0.1.26"

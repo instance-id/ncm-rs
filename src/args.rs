@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use clap::{arg, command, value_parser, Subcommand, ArgAction, Parser};
+use clap::{command, Subcommand, Parser};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
