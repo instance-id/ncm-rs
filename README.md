@@ -2,6 +2,8 @@
 
 Neovim Configuration Manager (Store/Change/Swap Configurations)
 
+<img src="media/list_example.png">
+
 I created this package because I wanted to try out Lazyvim (which is why it is referencec a few times) and other similar configuration packages and plugins without having to manually move my configuration files each time. I also wanted to be able to easily switch between configurations.
 
 > **Notice**
@@ -65,8 +67,6 @@ ncm load <name>
 ```bash
 ncm list
 ```
-
-<img src="media/list_example.png">
 
 #### Remove a configuration
 
