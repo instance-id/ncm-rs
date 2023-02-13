@@ -26,7 +26,10 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 
 ### Make a backup of your current configuration. Always better to be safe than sorry.
 
-To use this package, first backup your current configuration. If requested, automatic backup and movement of the original configuration could be added in the future. Unless/until that happens, you will need to move your configuration manually.
+> **Note**
+> ### An automated backup and movement of the original configuration has been added.
+
+~~To use this package, first backup your current configuration. If requested, automatic backup and movement of the original configuration could be added in the future. Unless/until that happens, you will need to move your configuration manually.~~
 
 > **Note** 
 > For the time being this package uses a symlink to swap/change which confuration Neovim will load.
