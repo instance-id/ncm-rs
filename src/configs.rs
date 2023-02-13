@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+use anyhow::anyhow;
 use serde::{de::Error, Deserialize, Serialize};
 use serde_json::Result;
 
@@ -17,6 +19,13 @@ pub struct ConfigData {
     pub description: Option<String>,
 }
 
+// Backup Data Structure
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct BackupInfo{
+    pub name: String,
+    pub path: String,
+}
+
 // --| Load Configs -----------------------------
 // Load a configuration file by name. If name is not specified then the default configuration is used.
 pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<ConfigData> {
@@ -27,7 +36,7 @@ pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<Confi
     let config_data: Vec<ConfigData> = configs.configs.clone();
     let default_config = configs.configs_default.clone();
 
-    if config_name == "" {
+    if config_name.is_empty() {
         target_config = default_config;
     } else {
         target_config = config_name.to_string();
@@ -40,13 +49,13 @@ pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<Confi
             write_default(&configs, config_path)?;
             Ok(config)
         }
-        Err(_e) => return Err(serde_json::Error::custom(format!("No configuration found with name {target_config}"))),
+        Err(_e) => Err(serde_json::Error::custom(format!("No configuration found with name {target_config}"))),
     }
 }
 
 // --| Find Config ------------------------------
 // Using config_path as the json file location, and ConfigData struct as input, write the data to the json file.
-pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> anyhow::Result<()> {
+pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> Result<()> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
 
     let mut configs: Configs = serde_json::from_str(&config_file)?;
@@ -54,11 +63,7 @@ pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> anyhow::
 
     let config_json = serde_json::to_string(&configs)?;
 
-    if std::fs::write(config_path, config_json).is_ok() {
-        Ok(())
-    } else {
-        Err(serde_json::Error::custom("Failed to write configuration to disk").into())
-    }
+    write_config_to_disk(config_path, config_json)
 }
 
 // --| Set Default ------------------------------
@@ -73,7 +78,7 @@ pub(crate) fn list_configs(config_path: &str) -> anyhow::Result<Configs> {
 // --| Remove Config ----------------------------
 // Using config_path as the json file location and config_name as the
 // name of the config to remove, remove the config from the json file
-pub(crate) fn remove_config(config_path: &str, config_name: &str) -> anyhow::Result<()> {
+pub(crate) fn remove_config(config_path: &str, config_name: &str) -> Result<()> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
 
     let mut configs: Configs = serde_json::from_str(&config_file)?;
@@ -81,43 +86,68 @@ pub(crate) fn remove_config(config_path: &str, config_name: &str) -> anyhow::Res
 
     let config_json = serde_json::to_string(&configs)?;
 
-    if std::fs::write(config_path, config_json).is_ok() {
-        Ok(())
-    } else {
-        Err(serde_json::Error::custom("Failed to write configuration to disk").into())
-    }
+    write_config_to_disk(config_path, config_json)
 }
 
 // --| Set Default ------------------------------
 // Using config_path as the json file location and config_name as the name
 // of the config to set as default, set the config as default in the json file
-pub(crate) fn set_default(config_path: &str, config_name: &str) -> anyhow::Result<()> {
+pub(crate) fn set_default(config_path: &str, config_name: &str) -> Result<()> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
 
     let mut configs: Configs = serde_json::from_str(&config_file)?;
 
-    if configs.configs.iter().find(|x| x.name == config_name).is_none() {
-        return Err(serde_json::Error::custom("No config found").into());
+    if !configs.configs.iter().any(|x| x.name == config_name) {
+        return Err(serde_json::Error::custom("No config found"));
     }
 
     configs.configs_default = config_name.to_string();
     let config_json = serde_json::to_string(&configs)?;
 
-    if std::fs::write(config_path, config_json).is_ok() {
-        Ok(())
+    write_config_to_disk(config_path, config_json)
+}
+
+pub(crate) fn create_symlink(nvim_path: &mut PathBuf, config_path: Option<PathBuf>) -> anyhow::Result<()> {
+    if let Some(new_config) = config_path {
+        let new_config = new_config.canonicalize()?;
+
+        if !new_config.exists() {
+            return Err(anyhow!(format!("Configuration path {} not found", new_config.to_str().unwrap())));
+        }
+
+        match (&nvim_path.exists(), &nvim_path.is_dir(), true) {
+            (true, true, true) => std::fs::remove_dir_all(&nvim_path)?,
+            (true, false, true) => std::fs::remove_file(&nvim_path)?,
+            (true, _, false) => return Err(anyhow!("Failed to write configuration to disk")),
+            _ => {}
+        };
+
+        std::os::unix::fs::symlink(new_config, nvim_path)?;
     } else {
-        Err(serde_json::Error::custom("Failed to write configuration to disk").into())
+        return Err(anyhow!("Failed to write configuration to disk"));
     }
+
+    Ok(()) 
 }
 
 // --| Helper Functions -------------------------
+// --|-------------------------------------------
+// Write the configuration to disk
+fn write_config_to_disk(config_path: &str, config_json: String) -> Result<(), > {
+    if std::fs::write(config_path, config_json).is_ok() {
+        Ok(())
+    } else {
+        Err(serde_json::Error::custom("Failed to write configuration to disk"))
+    }
+}
+
 // Check if a configuration exists by name
 fn find_config(configs: Vec<ConfigData>, config_name: &str) -> Result<ConfigData> {
-    return if let Some(config) = configs.into_iter().find(|x| x.name == config_name) {
+    if let Some(config) = configs.into_iter().find(|x| x.name == config_name) {
         Ok(config)
     } else {
         Err(serde_json::Error::custom(format!("No configuration found with name {config_name}")))
-    };
+    }
 }
 
 // Write currently loaded configuration as the default configuration
@@ -125,23 +155,23 @@ fn write_default(configs: &Configs, config_path: &str) -> Result<()> {
     let config_json = serde_json::to_string(&configs)?;
 
     if std::fs::write(config_path, config_json).is_ok() {
-        return Ok(());
+        Ok(())
     } else {
-        Err(serde_json::Error::custom("Failed to write configuration to disk").into())
+        Err(serde_json::Error::custom("Failed to write configuration to disk"))
     }
 }
 
 // --| Tests ------------------------------------
-
+// --|-------------------------------------------
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
+    use serde_json::Result;
     use std::fs::File;
     use std::io::Write;
+    use std::path::{Path, PathBuf};
     use std::str::FromStr;
-    use std::path::PathBuf;
-    use serde_json::Result;
-    use pretty_assertions::assert_eq;
 
     #[cfg(test)]
     #[ctor::ctor]
@@ -152,21 +182,21 @@ mod tests {
     fn load_config_test() {
         let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_load").expect("Failed to create temp dir");
 
-        let tmp_config_dir = PathBuf::from(tmp_nvim.join("config"));
-        let tmp_data_dir = PathBuf::from(tmp_nvim.join("data"));
-        let tmp_nvim_dir = PathBuf::from(tmp_nvim.join("nvim"));
+        let tmp_config_dir = tmp_nvim.join("config");
+        let tmp_data_dir = tmp_nvim.join("data");
+        let tmp_nvim_dir = tmp_nvim.join("nvim");
 
         std::fs::create_dir_all(tmp_config_dir.clone()).unwrap();
         std::fs::create_dir_all(tmp_data_dir.clone()).unwrap();
         std::fs::create_dir_all(tmp_nvim_dir.clone()).unwrap();
 
-        print!("{:?}\n", &tmp_config_dir);
-        print!("{:?}\n", &tmp_data_dir);
+        println!("{:?}", &tmp_config_dir);
+        println!("{:?}", &tmp_data_dir);
 
         let _result = create_test_data(&tmp_config_dir, &tmp_data_dir);
 
         let config_file = &tmp_config_dir.join("configs.json");
-        println!("{:?}", config_file);
+        println!("{}", config_file.to_str().unwrap());
 
         // --| Load Configuration Test ----------
         let config = load_configs(config_file.to_str().unwrap(), "test");
@@ -184,22 +214,7 @@ mod tests {
         let config_path = PathBuf::from_str(&config.path).ok();
 
         // --| Symlink Test ---------------------
-        if let Some(new_config) = config_path {
-            let new_config = new_config.canonicalize().expect("Failed to canonicalize path");
-
-            if !new_config.exists() {
-                return Err(anyhow::anyhow!("Config file does not exist")).expect("Failed to remove file");
-            }
-
-            match (tmp_nvim_dir.exists(), tmp_nvim_dir.is_dir(), true) {
-                (true, true, true) => std::fs::remove_dir_all(&tmp_nvim_dir).expect("Failed to remove directory"),
-                (true, false, true) => std::fs::remove_file(&tmp_nvim_dir).expect("Failed to remove file"),
-                (true, _, false) => return Err(anyhow::anyhow!("Config file does not exist")).expect("Failed to remove file"),
-                _ => {}
-            };
-
-            std::os::unix::fs::symlink(new_config, &tmp_nvim_dir).expect("Failed to create symlink");
-        }
+        create_symlink(&mut tmp_nvim_dir.clone(), config_path).expect(" Failed to create symlink");
 
         assert_eq!(&tmp_nvim_dir.read_link().unwrap(), &tmp_data_dir.join("config_two"));
         std::fs::remove_dir_all(tmp_nvim).unwrap();
@@ -209,19 +224,19 @@ mod tests {
     #[test]
     fn add_config_test() {
         let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_add").expect("Failed to create temp dir");
-        let tmp_config_dir = PathBuf::from(tmp_nvim.join("config"));
-        let tmp_data_dir = PathBuf::from(tmp_nvim.join("data"));
+        let tmp_config_dir = tmp_nvim.join("config");
+        let tmp_data_dir = tmp_nvim.join("data");
 
         std::fs::create_dir_all(tmp_config_dir.clone()).unwrap();
         std::fs::create_dir_all(tmp_data_dir.clone()).unwrap();
 
-        print!("{:?}\n", &tmp_config_dir);
-        print!("{:?}\n", &tmp_data_dir);
+        println!("{:?}", &tmp_config_dir);
+        println!("{:?}", &tmp_data_dir);
 
         let _result = create_test_data(&tmp_config_dir, &tmp_data_dir);
 
         let config_file = &tmp_config_dir.join("configs.json");
-        println!("{:?}", config_file);
+        println!("{}", config_file.to_str().unwrap());
 
         let config = ConfigData {
             name: "test3".to_string(),
@@ -248,19 +263,19 @@ mod tests {
     #[test]
     fn remove_config_test() {
         let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_remove").expect("Failed to create temp dir");
-        let tmp_config_dir = PathBuf::from(tmp_nvim.join("config"));
-        let tmp_data_dir = PathBuf::from(tmp_nvim.join("data"));
+        let tmp_config_dir = tmp_nvim.join("config");
+        let tmp_data_dir = tmp_nvim.join("data");
 
         std::fs::create_dir_all(tmp_config_dir.clone()).unwrap();
         std::fs::create_dir_all(tmp_data_dir.clone()).unwrap();
 
-        print!("{:?}\n", &tmp_config_dir);
-        print!("{:?}\n", &tmp_data_dir);
+        println!("{:?}", &tmp_config_dir);
+        println!("{:?}", &tmp_data_dir);
 
         let _result = create_test_data(&tmp_config_dir, &tmp_data_dir);
 
         let config_file = &tmp_config_dir.join("configs.json");
-        println!("{:?}", config_file);
+        println!("{}", config_file.to_str().unwrap());
 
         let result = remove_config(config_file.to_str().unwrap(), "default");
 
@@ -277,7 +292,7 @@ mod tests {
     }
 
     // --| Create Test Data ---------------------
-    fn create_test_data(config_path: &PathBuf, data_dir: &PathBuf) -> Result<Configs> {
+    fn create_test_data(config_path: &Path, data_dir: &Path) -> Result<Configs> {
         let file_path = config_path.join("configs.json");
 
         let mut configs = Configs { configs: Vec::new(), configs_default: String::new() };

@@ -20,12 +20,22 @@ pub struct NvCfgArgs {
 pub enum Commands {
     /// Adds new configuration directory, referenced by name 
     Add { name: String, path: PathBuf, description: Option<String> },
+    
     /// Remove a configuration from the config store
     Remove { name: Option<String> },
+    
     /// Load a configuration by name from the configuration store
     Load { name: Option<String> },
+    
     /// Set default configuration in which to load if not specified
     SetDefault { name: String }, 
+    
     /// List current stored configurations
     List,
+   
+    /// Setup NCM for the first time
+    Setup,
+    
+    /// Backup all or current configuration
+    Backup { name: Option<String> },
 }
