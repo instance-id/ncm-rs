@@ -92,6 +92,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+//noinspection RsSimplifyPrint
 // --| Check Setup ------------------------------
 fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_complete: bool) -> Result<()> {
     let mut nvim_symlinked: bool = false;

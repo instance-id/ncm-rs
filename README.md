@@ -88,7 +88,7 @@ https://user-images.githubusercontent.com/48368821/218245017-c2dda78f-7807-49f8-
 
 ---
 
-Tests are located in configs.rs and are automatically run when using `just install` but can be run using `just test` or `cargo test` 
+Tests are currently located in `configs.rs` and `settings.rs` (more to come) and are automatically run when using `just install` but can be run using `just test` or `cargo test` 
 
 ---
 ![alt text](https://i.imgur.com/cg5ow2M.png "instance.id")
