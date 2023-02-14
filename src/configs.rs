@@ -166,12 +166,12 @@ fn write_default(configs: &Configs, config_path: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
-    use serde_json::Result;
     use std::fs::File;
     use std::io::Write;
-    use std::path::{Path, PathBuf};
     use std::str::FromStr;
+    use serde_json::Result;
+    use std::path::{Path, PathBuf};
+    use pretty_assertions::assert_eq;
 
     #[cfg(test)]
     #[ctor::ctor]
