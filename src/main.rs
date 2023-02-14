@@ -1,35 +1,33 @@
 mod args;
 mod backup;
-mod configs;
-mod constants;
 mod logger;
+mod configs;
 mod settings;
+mod constants;
 
-use configs::{BackupInfo, ConfigData};
-use constants::*;
-
-use crate::args::{Commands, NvCfgArgs};
 use crate::settings::Settings;
+use crate::args::{Commands, NvCfgArgs};
 
-use ansi_term::Colour::RGB;
-use anyhow::{anyhow, Result};
+use constants::*;
+use configs::{BackupInfo, ConfigData};
+
 use clap::Parser;
-use fs_extra::dir::move_dir;
-use inquire::ui::RenderConfig;
-use inquire::{Confirm, Text};
-use log::{error, info};
 use std::env::var;
-use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use log::{error, info};
+use ansi_term::Colour::RGB;
+use fs_extra::dir::move_dir;
+use anyhow::{anyhow, Result};
+use inquire::{Confirm, Text};
+use inquire::ui::RenderConfig;
+use std::path::{Path, PathBuf};
 
 #[macro_use]
 extern crate prettytable;
-
 use prettytable::{color, format::Alignment, Attr, Cell, Row, Table};
 
 #[macro_use]
 extern crate lazy_static;
-
 use std::sync::{RwLock, RwLockWriteGuard};
 
 // --| Global Settings --------------------------

@@ -1,11 +1,10 @@
-use std::io::prelude::*;
-use std::io::{Seek, Write};
-use std::iter::Iterator;
-use zip::result::ZipError;
-use zip::write::FileOptions;
-
 use std::fs::File;
 use std::path::Path;
+use std::io::prelude::*;
+use std::iter::Iterator;
+use zip::result::ZipError;
+use std::io::{Seek, Write};
+use zip::write::FileOptions;
 use walkdir::{DirEntry, WalkDir};
 
 const METHOD_DEFLATED: Option<zip::CompressionMethod> = Some(zip::CompressionMethod::Deflated);

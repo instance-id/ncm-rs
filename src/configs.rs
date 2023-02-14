@@ -1,7 +1,7 @@
-use std::path::PathBuf;
 use anyhow::anyhow;
-use serde::{de::Error, Deserialize, Serialize};
+use std::path::PathBuf;
 use serde_json::Result;
+use serde::{de::Error, Deserialize, Serialize};
 
 // Configuration Data Container
 #[derive(Debug, Serialize, Deserialize, Clone)]
