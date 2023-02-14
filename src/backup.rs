@@ -10,6 +10,7 @@ use walkdir::{DirEntry, WalkDir};
 
 const METHOD_DEFLATED: Option<zip::CompressionMethod> = Some(zip::CompressionMethod::Deflated);
 
+// zip = "0.6.4"
 // Used from example in zip-rs:
 // https://github.com/zip-rs/zip/blob/master/examples/write_dir.rs
 pub(crate) fn create_backup(src_dir: &Path, dst_file: &Path) -> zip::result::ZipResult<()> {
