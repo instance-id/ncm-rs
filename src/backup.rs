@@ -53,7 +53,7 @@ fn zip_dir<T>(
         // Write file or directory explicitly
         // Some unzip tools unzip files with directory paths correctly, some do not!
         if path.is_file() {
-            println!("adding file {path:?} as {name:?} ...");
+            debug!("adding file {path:?} as {name:?} ...");
             #[allow(deprecated)]
             zip.start_file_from_path(name, options)?;
             let mut f = File::open(path)?;
@@ -64,7 +64,7 @@ fn zip_dir<T>(
         } else if !name.as_os_str().is_empty() {
             // Only if not root! Avoids path spec / warning
             // and map name conversion failed error on unzip
-            println!("adding dir {path:?} as {name:?} ...");
+            debug!("adding dir {path:?} as {name:?} ...");
             #[allow(deprecated)]
             zip.add_directory_from_path(name, options)?;
         }
@@ -74,7 +74,6 @@ fn zip_dir<T>(
 }
 
 // --| Tests ------------------------------------
-
 #[cfg(test)]
 mod tests {
     use super::*;

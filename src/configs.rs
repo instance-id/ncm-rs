@@ -21,9 +21,19 @@ pub struct ConfigData {
 
 // Backup Data Structure
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct BackupInfo{
+pub struct BackupInfo {
     pub name: String,
     pub path: String,
+}
+
+// Create BackupInfo new function
+impl BackupInfo {
+    pub fn new() -> BackupInfo {
+        BackupInfo {
+            name: String::new(),
+            path: String::new(),
+        }
+    }
 }
 
 // --| Load Configs -----------------------------
@@ -78,30 +88,13 @@ pub(crate) fn list_configs(config_path: &str) -> anyhow::Result<Configs> {
 // --| Remove Config ----------------------------
 // Using config_path as the json file location and config_name as the
 // name of the config to remove, remove the config from the json file
-pub(crate) fn remove_config(config_path: &str, config_name: &str) -> Result<()> {
+pub(crate) fn remove_config(name: &Option<String>, config_path: &str) -> Result<()> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
+    let config_name = name.as_ref().unwrap().to_string();
 
     let mut configs: Configs = serde_json::from_str(&config_file)?;
     configs.configs.retain(|x| x.name != config_name);
 
-    let config_json = serde_json::to_string(&configs)?;
-
-    write_config_to_disk(config_path, config_json)
-}
-
-// --| Set Default ------------------------------
-// Using config_path as the json file location and config_name as the name
-// of the config to set as default, set the config as default in the json file
-pub(crate) fn set_default(config_path: &str, config_name: &str) -> Result<()> {
-    let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
-
-    let mut configs: Configs = serde_json::from_str(&config_file)?;
-
-    if !configs.configs.iter().any(|x| x.name == config_name) {
-        return Err(serde_json::Error::custom("No config found"));
-    }
-
-    configs.configs_default = config_name.to_string();
     let config_json = serde_json::to_string(&configs)?;
 
     write_config_to_disk(config_path, config_json)
@@ -127,7 +120,7 @@ pub(crate) fn create_symlink(nvim_path: &mut PathBuf, config_path: Option<PathBu
         return Err(anyhow!("Failed to write configuration to disk"));
     }
 
-    Ok(()) 
+    Ok(())
 }
 
 // --| Helper Functions -------------------------
@@ -277,7 +270,7 @@ mod tests {
         let config_file = &tmp_config_dir.join("configs.json");
         println!("{}", config_file.to_str().unwrap());
 
-        let result = remove_config(config_file.to_str().unwrap(), "default");
+        let result = remove_config(&Some("default".to_string()), config_file.to_str().unwrap());
 
         assert!(result.is_ok());
 

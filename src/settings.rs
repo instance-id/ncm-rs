@@ -9,21 +9,21 @@ use crate::constants::*;
 
 #[derive(Debug, Clone)]
 pub struct Settings {
-    pub config: Ini,
+    pub settings: Ini,
     pub ncm_path: PathBuf,
     pub nvim_path: PathBuf,
     pub configs_path: PathBuf,
     pub settings_path: PathBuf,
-    pub settings: HashMap<String, HashMap<String, Option<String>>>,
+    pub settings_map: HashMap<String, HashMap<String, Option<String>>>,
 }
 
 impl Settings {
     pub fn new() -> Settings {
         Settings {
-            config: Ini::new(),
-            settings: HashMap::new(),
+            settings: Ini::new(),
             ncm_path: PathBuf::new(),
             nvim_path: PathBuf::new(),
+            settings_map: HashMap::new(),
             configs_path: PathBuf::new(),
             settings_path: PathBuf::new(),
         }
@@ -36,10 +36,11 @@ impl Settings {
 
         if !self.settings_path.exists() {
             std::fs::create_dir_all(self.settings_path.parent().unwrap())?;
-            self.config.read(String::from(
+            self.settings.read(String::from(
                 "[ncm]
-                    setup_complete = false")).expect("Unable to read settings file");
-            self.config.write(&self.settings_path).expect("Unable to write settings file");
+                    setup_complete = false
+            backup_path=none")).expect("Unable to read settings file");
+            self.settings.write(&self.settings_path).expect("Unable to write settings file");
         }
 
         if !self.configs_path.exists() {
@@ -52,7 +53,7 @@ impl Settings {
     }
 
     pub fn write_settings(&mut self) -> Result<()> {
-        if self.config.write(&self.settings_path).is_err() {
+        if self.settings.write(&self.settings_path).is_err() {
             Err(anyhow!("Unable to write settings file"))
         } else { Ok(()) }
     }
@@ -91,11 +92,11 @@ pub fn get_settings(config_home: &str, home: &str) -> Settings {
     settings.configs_path.push(CONFIGS_FILE);
 
     settings.check_directories().expect("Unable to create directories");
-    settings.config.load(&settings.settings_path).unwrap();
+    settings.settings.load(&settings.settings_path).unwrap();
 
     let mut config = Ini::new();
     let map = config.load(&settings.settings_path).unwrap();
-    settings.settings = map;
+    settings.settings_map = map;
     settings
 }
 
@@ -139,7 +140,7 @@ mod tests {
         assert_eq!(settings.nvim_path, dir.as_path().join(".config").join("nvim"));
         assert_eq!(settings.settings_path, dir.as_path().join(".config").join(NCM_DIR).join(SETTINGS_FILE));
         assert_eq!(settings.configs_path, dir.as_path().join(".config").join(NCM_DIR).join(CONFIGS_FILE));
-        assert_eq!(settings.config.getbool(NCM, SETUP_COMPLETE).unwrap().unwrap(), false);
+        assert_eq!(settings.settings.getbool(NCM, SETUP_COMPLETE).unwrap().unwrap(), false);
 
         std::fs::remove_dir_all(dir).unwrap();
     }

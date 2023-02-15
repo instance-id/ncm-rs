@@ -32,5 +32,7 @@ reset:
   mv ~/.config/nvim_configs/nvim ~/.config/ || true
   rm -rf ~/.config/nvim_configs || true
   rm -rf ~/.config/ncm-rs || true
-  
+
+# --| Reset To Default and Rebuild/Install NCM
 reinstall: reset install
+

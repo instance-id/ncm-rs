@@ -1,5 +1,9 @@
+use std::env::var;
+use std::fs::File;
+use std::str::FromStr;
 use log::{Level, Metadata, Record};
-use log::{LevelFilter, SetLoggerError};
+use log::{LevelFilter};
+use simplelog::{ColorChoice, CombinedLogger, Config, TerminalMode, TermLogger, WriteLogger};
 
 struct SimpleLogger;
 
@@ -17,8 +21,16 @@ impl log::Log for SimpleLogger {
     fn flush(&self) {}
 }
 
-static LOGGER: SimpleLogger = SimpleLogger;
+pub (crate) fn initialize(){
+    let log_level = var("NCM_LOG_LEVEL").unwrap_or_else(|_| "Info".to_string());
 
-pub fn init() -> Result<(), SetLoggerError> {
-    log::set_logger(&LOGGER).map(|()| log::set_max_level(LevelFilter::Info))
+    let mut temp_dir = std::env::temp_dir();
+    temp_dir.push("ncm.log");
+
+    CombinedLogger::init(
+        vec![
+            TermLogger::new(LevelFilter::from_str(&log_level).unwrap(), Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+            WriteLogger::new(LevelFilter::Info, Config::default(), File::create(&temp_dir).unwrap()),
+        ]
+    ).expect("Could not initialize logger"); 
 }

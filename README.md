@@ -15,6 +15,7 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 
 - Add multiple configurations
 - Conveniently switch between said configs
+- Backup selected/all configurations (demonstrated below)
 
 
 ### Install Notes
@@ -32,17 +33,17 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 ~~To use this package, first backup your current configuration. If requested, automatic backup and movement of the original configuration could be added in the future. Unless/until that happens, you will need to move your configuration manually.~~
 
 > **Note** 
-> For the time being this package uses a symlink to swap/change which confuration Neovim will load.
+> This package uses a file system symlink to swap/change which configuration Neovim will load.
 
 When you select a configuration using the load option, it will be symlinked to the `~/.config/nvim` directory.
 
-<img src="media/config_backup.png">
+
 
 
 
 ### Install
 ---
-
+    
 1. `sudo apt install just` (or equivalent for your distro)
 2. `git clone https://github.com/instance.id/ncm-rs.git`
 3. `cd ncm-rs`
@@ -76,6 +77,16 @@ ncm list
 ```bash
 ncm remove <name>
 ```
+
+#### Backup current configuration
+
+```bash
+ncm backup <name (optional)> 
+```
+
+![](media/config_backup.gif)
+
+<img src="media/config_backup.gif">
 
 ### Demonstration
 
