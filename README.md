@@ -1,10 +1,10 @@
 # ncm-rs
 
-Neovim Configuration Manager (Store/Change/Swap Configurations)
+Neovim Configuration Manager (Swap/Backup/Try Configurations Easily)
 
 <img src="media/list_example.png">
 
-I created this package because I wanted to try out Lazyvim (which is why it is referencec a few times) and other similar configuration packages and plugins without having to manually move my configuration files each time. I also wanted to be able to easily switch between configurations.
+I created this package because I wanted to try out Lazyvim (which is why it is referenced a few times) and other similar configuration packages and plugins without having to manually move my configuration files each time. I also wanted to be able to easily switch between configurations.
 
 > **Note**
 > Tests have been added. Though, this is still to be considered a WIP. Currently Linux only. Will add Windows support in the near future.
@@ -25,10 +25,10 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 > **Warning** 
 > Make a backup!
 
-### Make a backup of your current configuration. Always better to be safe than sorry.
+### Make a backup of your current configuration. While NCM will backup your configuration for you, always better to be safe than sorry.
 
 > **Note**
-> ### An automated backup and movement of the original configuration has been added.
+> ### An automated backup and setup process has been added.
 
 ~~To use this package, first backup your current configuration. If requested, automatic backup and movement of the original configuration could be added in the future. Unless/until that happens, you will need to move your configuration manually.~~
 
