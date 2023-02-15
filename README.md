@@ -38,9 +38,6 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 When you select a configuration using the load option, it will be symlinked to the `~/.config/nvim` directory.
 
 
-
-
-
 ### Install
 ---
     
@@ -84,15 +81,7 @@ ncm remove <name>
 ncm backup <name (optional)> 
 ```
 
-![](media/config_backup.gif)
-
-<img src="media/config_backup.gif">
-
-### Demonstration
-
----
-
-https://user-images.githubusercontent.com/48368821/218245017-c2dda78f-7807-49f8-a44a-ad42d280d299.mp4
+<img src="media/config_backup.gif" width="700px">
 
 
 ### Tests
