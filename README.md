@@ -15,6 +15,7 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 
 - Add multiple configurations
 - Conveniently switch between said configs
+- Automatic initial backup
 - Backup selected/all configurations (demonstrated below)
 
 
@@ -23,20 +24,13 @@ I created this package because I wanted to try out Lazyvim (which is why it is r
 ---
 
 > **Warning** 
-> Make a backup!
+> Make a backup of your current configuration. While NCM will backup your configuration for you, always better to be safe than sorry.
 
-### Make a backup of your current configuration. While NCM will backup your configuration for you, always better to be safe than sorry.
-
-> **Note**
-> ### An automated backup and setup process has been added.
-
-~~To use this package, first backup your current configuration. If requested, automatic backup and movement of the original configuration could be added in the future. Unless/until that happens, you will need to move your configuration manually.~~
-
-> **Note** 
-> This package uses a file system symlink to swap/change which configuration Neovim will load.
-
+This package uses a file system symlink to swap/change which configuration Neovim will load.
 When you select a configuration using the load option, it will be symlinked to the `~/.config/nvim` directory.
 
+> **Note**
+> An automated backup and setup process has been added.
 
 ### Install
 ---
