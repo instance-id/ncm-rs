@@ -11,7 +11,8 @@ use crate::cmds::{Commands, NvCfgArgs};
 use anyhow::{Result};
 use clap::Parser;
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 extern crate simplelog;
 
 #[macro_use]
@@ -22,10 +23,11 @@ extern crate lazy_static;
 
 use std::sync::{RwLock};
 
-
 // --| Global Settings ---------------------
 lazy_static! {
-    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(XDG_CONFIG_HOME, HOME));
+    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(
+        XDG_CONFIG_HOME, if cfg!(windows) { APP_DATA_LOCAL } else { HOME }
+    ));
 }
 
 fn main() -> Result<()> {

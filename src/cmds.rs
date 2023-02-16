@@ -1,15 +1,15 @@
 use std::env::var;
 use std::str::FromStr;
-use log::{debug, error, info};
 use ansi_term::Color::RGB;
-use fs_extra::dir::move_dir;
 use anyhow::{anyhow, Result};
-use inquire::{Confirm, Select, Text};
+use log::{debug, error, info};
 use inquire::ui::RenderConfig;
 use std::path::{Path, PathBuf};
 use std::sync::RwLockWriteGuard;
 use prettytable::format::Alignment;
+use inquire::{Confirm, Select, Text};
 use clap::{command, Subcommand, Parser};
+use fs_extra::dir::{CopyOptions, move_dir};
 use prettytable::{Attr, Cell, color, Row, Table};
 
 use crate::configs;
@@ -95,7 +95,7 @@ pub(crate) fn list_configs(config_json: &str) {
 
     let current_str = RGB(70, 130, 180).paint("Current Configurations");
     println!("{}", current_str);
-    println!(""); // There is probably a better way to do this, but I don't know what it is...
+    println!(" "); // There is probably a better way to do this, but I don't know what it is...
 
     let name_str = RGB(70, 130, 180).paint("Name");
     let path_str = RGB(70, 130, 180).paint("Path");
@@ -323,8 +323,7 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
 
         backup_file.push(backup_path.to_str().unwrap());
         backup_file.push(format!("{}.zip", &nvim_config_name));
-
-        println!(" ");
+        
         let creating_backup_path = RGB(146, 181, 95).paint("Creating backup at: ");
         info!("{} {}\n", creating_backup_path, backup_file.to_str().unwrap());
 
@@ -365,7 +364,8 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
                 info!("Moving original config to: {:?}", new_config_path);
 
                 std::fs::create_dir_all(new_config_path)?;
-                move_dir(nvim_path, new_config_path, &fs_extra::dir::CopyOptions::new())?;
+      
+                move_dir(nvim_path, new_config_path, &CopyOptions::new().copy_inside(true))?;
             } else {
                 error!("Error creating backup");
                 return Err(anyhow!("Error creating backup"));

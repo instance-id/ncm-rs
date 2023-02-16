@@ -49,7 +49,7 @@ pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<Confi
     if config_name.is_empty() {
         target_config = default_config;
     } else {
-        target_config = config_name.to_string();
+        target_config = config_name.to_string()
     }
 
     let config_result = find_config(config_data, &target_config);
@@ -115,7 +115,14 @@ pub(crate) fn create_symlink(nvim_path: &mut PathBuf, config_path: Option<PathBu
             _ => {}
         };
 
+        #[cfg(target_os = "linux")]
         std::os::unix::fs::symlink(new_config, nvim_path)?;
+        
+        #[cfg(target_os = "windows")]
+        std::os::windows::fs::symlink_dir(new_config, nvim_path)?;
+        
+        #[cfg(target_os = "macos")]
+        std::os::macos::fs::symlink(new_config, nvim_path)?; 
     } else {
         return Err(anyhow!("Failed to write configuration to disk"));
     }
@@ -173,7 +180,8 @@ mod tests {
     // --| Load Config --------------------------
     #[test]
     fn load_config_test() {
-        let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_load").expect("Failed to create temp dir");
+        let mut tmp_nvim = std::env::temp_dir();
+        tmp_nvim.push("ncm_tmp_load");
 
         let tmp_config_dir = tmp_nvim.join("config");
         let tmp_data_dir = tmp_nvim.join("data");
@@ -216,7 +224,9 @@ mod tests {
     // --| Add Config ---------------------------
     #[test]
     fn add_config_test() {
-        let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_add").expect("Failed to create temp dir");
+        let mut tmp_nvim = std::env::temp_dir();
+        tmp_nvim.push("ncm_tmp_add");
+
         let tmp_config_dir = tmp_nvim.join("config");
         let tmp_data_dir = tmp_nvim.join("data");
 
@@ -255,7 +265,9 @@ mod tests {
     // --| Remove Config ------------------------
     #[test]
     fn remove_config_test() {
-        let tmp_nvim = PathBuf::from_str("/tmp/ncm_tmp_remove").expect("Failed to create temp dir");
+        let mut tmp_nvim = std::env::temp_dir();
+        tmp_nvim.push("ncm_tmp_remove");
+       
         let tmp_config_dir = tmp_nvim.join("config");
         let tmp_data_dir = tmp_nvim.join("data");
 

@@ -1,5 +1,9 @@
 // --| Environment Variables ------
 pub const HOME: &str = "HOME";
+pub const APP_DATA_LOCAL: &str = "LOCALAPPDATA";
+
+// XDG_CONFIG_HOME is not a standard environment variable on Windows
+// But for nvim, if it is set, it is used. Otherwise, it defaults to %USERPROFILE%\AppData\Local\nvim 
 pub const XDG_CONFIG_HOME: &str = "XDG_CONFIG_HOME";
 
 // --| Settings Keys -------------
