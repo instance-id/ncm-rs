@@ -361,7 +361,7 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
 
                 std::fs::create_dir_all(new_config_path)?;
                 
-                #[cfg(target_os = "!windows")]     
+                #[cfg(not(target_os = "windows"))]     
                 move_dir(nvim_path, new_config_path, &CopyOptions::new().copy_inside(true))?;
                
                 #[cfg(target_os = "windows")]
