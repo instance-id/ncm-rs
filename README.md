@@ -7,7 +7,7 @@ Neovim Configuration Manager (Swap/Backup/Try Configurations Easily)
 I created this package because I wanted to try out Lazyvim (which is why it is referenced a few times) and other similar configuration packages and plugins without having to manually move my configuration files each time. I also wanted to be able to easily switch between configurations.
 
 > **Note**
-> Tests have been added. Though, this is still to be considered a WIP. Currently Linux only. Will add Windows support in the near future.
+> Tests have been added. Though, this is still to be considered a WIP. Currently Linux and Windows only.
 
 ### Notable Features (so far)
 
@@ -38,7 +38,7 @@ When you select a configuration using the load option, it will be symlinked to t
 1. `sudo apt install just` (or equivalent for your distro)
 2. `git clone https://github.com/instance.id/ncm-rs.git`
 3. `cd ncm-rs`
-4. `just install` (installs to `~/.local/bin/ncm`)
+4. `just install` (installs to `~/.local/bin/ncm` (might need to be added to $PATH on Windows))
 
 ---
 ### Example Usage
