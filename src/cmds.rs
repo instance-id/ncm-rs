@@ -360,8 +360,11 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
                 info!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path);
 
                 std::fs::create_dir_all(new_config_path)?;
-      
+                
+                #[cfg(target_os = "!windows")]     
                 move_dir(nvim_path, new_config_path, &CopyOptions::new().copy_inside(true))?;
+               
+                #[cfg(target_os = "windows")]
                 fs_extra::copy_items(&[nvim_path], new_config_path, &CopyOptions::new().copy_inside(true))?;
             } else {
                 error!("Error creating backup");

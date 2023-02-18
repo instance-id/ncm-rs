@@ -10,8 +10,8 @@ shebang := if os() == 'windows' {
 set shell := ["/usr/bin/env", "bash" ,"-c"]
 set windows-shell := ["pwsh.exe","-NoLogo", "-noprofile", "-c"]
 
-originalExe := "ncm-rs"
 newExe := "ncm"
+originalExe := "ncm-rs"
 targetPath := "./target/release/"
 releasePath := "./target/release/ncm"
 installPath :=  "/.local/bin/"
@@ -65,10 +65,28 @@ _install-macos: build
 # --| Manual Cleanup -------------
 # Revert all changes to system ---
 reset:
+	just _reset-{{os()}}
+
+# --| Linux
+_reset-linux:
   test -L ~/.config/nvim && rm ~/.config/nvim || true
   mv ~/.config/nvim_configs/nvim ~/.config/ || true
   rm -rf ~/.config/nvim_configs || true
   rm -rf ~/.config/ncm-rs || true
+
+# --| Windows
+_reset-windows:
+  #!{{shebang}}
+  $cfg = "C:\$($env:HOMEPATH)/.config"
+  $nvimDir = "${cfg}\nvim"
+  $nvCustom = "${cfg}\nvim_configs\nvim"
+  if (Get-Item -Path "${nvimDir}" | Select-Object -ExpandProperty LinkType) { rm $nvimDir } else {return}
+  if (test-path $nvCustom && !test-path "${nvimDir}") { mv "${nvCustom}" "${cfg}\"; }
+  rm -force -recurse "${cfg}\nvim_configs"; 
+  rm -force -recurse "${cfg}\ncm-rs"; 
+  
+# --| MacOS
+_reset-macos:
 
 # --| Reset To Default and Rebuild/Install NCM
 reinstall: reset install
