@@ -1,6 +1,20 @@
-#!/usr/bin/env just --justfile
+#!/usr/bin/env -S just --justfile
 
-set positional-arguments
+# Cross platform shebang:
+shebang := if os() == 'windows' {
+  'pwsh.exe'
+} else {
+  '/usr/bin/env bash'
+}
+
+set shell := ["/usr/bin/env", "bash" ,"-c"]
+set windows-shell := ["pwsh.exe","-NoLogo", "-noprofile", "-c"]
+
+newExe := "ncm"
+originalExe := "ncm-rs"
+targetPath := "./target/release/"
+releasePath := "./target/release/ncm"
+installPath :=  "/.local/bin/"
 
 lint:
   cargo clippy
@@ -14,25 +28,65 @@ debug:
 release: test
   cargo build --release
 
-run *args: debug
-    rm ./target/debug/ncm || true
-    mv -f ./target/debug/ncm-rs ./target/debug/ncm || true
-    ./target/debug/ncm {{args}} || true
+# --| Build ----------------------
+# --|-----------------------------
+build:
+  just _build-{{os()}}
 
-build: release
-    rm ./target/release/ncm || true
-    mv -f ./target/release/ncm-rs ./target/release/ncm || true
+# -| Linux
+_build-linux: release
+  rm ./target/release/ncm || true
+  mv -f ./target/release/ncm-rs ./target/release/ncm || true
 
-install: build
+# --| Windows
+_build-windows: release
+  if (test-path "{{releasePath}}.exe") { rm "{{releasePath}}.exe" };
+  mv '{{targetPath}}{{originalExe}}.exe' '{{targetPath}}{{newExe}}.exe'
+
+# --| MacOS
+_build-macos: release
+
+# --| Install --------------------
+# Install NCM --------------------
+install:
+	just _install-{{os()}}
+
+# --| Linux
+_install-linux: build
   cp ./target/release/ncm $HOME/.local/bin
 
-# --| Manual Test Cleanup/Revert Changes --------
+# --| Windows
+_install-windows: build
+  cp -force '{{releasePath}}.exe' ${HOME}/'{{installPath}}'
+
+# --| MacOS
+_install-macos: build
+
+# --| Manual Cleanup -------------
+# Revert all changes to system ---
 reset:
+	just _reset-{{os()}}
+
+# --| Linux
+_reset-linux:
   test -L ~/.config/nvim && rm ~/.config/nvim || true
   mv ~/.config/nvim_configs/nvim ~/.config/ || true
   rm -rf ~/.config/nvim_configs || true
   rm -rf ~/.config/ncm-rs || true
 
+# --| Windows
+_reset-windows:
+  #!{{shebang}}
+  $cfg = "C:\$($env:HOMEPATH)/.config"
+  $nvimDir = "${cfg}\nvim"
+  $nvCustom = "${cfg}\nvim_configs\nvim"
+  if (Get-Item -Path "${nvimDir}" | Select-Object -ExpandProperty LinkType) { rm $nvimDir } else {return}
+  if (test-path $nvCustom && !test-path "${nvimDir}") { mv "${nvCustom}" "${cfg}\"; }
+  rm -force -recurse "${cfg}\nvim_configs"; 
+  rm -force -recurse "${cfg}\ncm-rs"; 
+  
+# --| MacOS
+_reset-macos:
+
 # --| Reset To Default and Rebuild/Install NCM
 reinstall: reset install
-

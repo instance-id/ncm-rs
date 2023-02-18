@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 use anyhow::anyhow;
 use std::path::PathBuf;
 use serde_json::Result;
@@ -41,7 +42,7 @@ impl BackupInfo {
 pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<ConfigData> {
     let config_file = std::fs::read_to_string(config_path).expect("Failed to read file");
 
-    let target_config: String;
+    let mut target_config: String =  String::new();
     let mut configs: Configs = serde_json::from_str(&config_file)?;
     let config_data: Vec<ConfigData> = configs.configs.clone();
     let default_config = configs.configs_default.clone();
@@ -59,7 +60,7 @@ pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<Confi
             write_default(&configs, config_path)?;
             Ok(config)
         }
-        Err(_e) => Err(serde_json::Error::custom(format!("No configuration found with name {target_config}"))),
+        Err(_e) => Err(serde_json::Error::custom(format!("No configuration found with name {}", &target_config))),
     }
 }
 
@@ -117,12 +118,12 @@ pub(crate) fn create_symlink(nvim_path: &mut PathBuf, config_path: Option<PathBu
 
         #[cfg(target_os = "linux")]
         std::os::unix::fs::symlink(new_config, nvim_path)?;
-        
+
         #[cfg(target_os = "windows")]
         std::os::windows::fs::symlink_dir(new_config, nvim_path)?;
-        
+
         #[cfg(target_os = "macos")]
-        std::os::macos::fs::symlink(new_config, nvim_path)?; 
+        std::os::macos::fs::symlink(new_config, nvim_path)?;
     } else {
         return Err(anyhow!("Failed to write configuration to disk"));
     }
@@ -267,7 +268,7 @@ mod tests {
     fn remove_config_test() {
         let mut tmp_nvim = std::env::temp_dir();
         tmp_nvim.push("ncm_tmp_remove");
-       
+
         let tmp_config_dir = tmp_nvim.join("config");
         let tmp_data_dir = tmp_nvim.join("data");
 

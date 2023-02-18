@@ -1,3 +1,4 @@
+#![allow(unused_assignments)]
 // --| Environment Variables ------
 pub const HOME: &str = "HOME";
 pub const APP_DATA_LOCAL: &str = "LOCALAPPDATA";
@@ -19,6 +20,8 @@ pub const CONFIGS_FILE: &str = "configs.json";
 // --| Information Messages ------
 pub const INFO_SETUP_COMPLETE: &str = "Setup complete!";
 pub const INFO_NEW_SETUP: &str = "New setup detected, creating configuration directories and settings files";
+pub const INFO_BACKUP_COMPLETE: &str = "Backup created successfully";
+pub const INFO_MOVING_ORIGINAL: &str = "Moving original config to";
 
 // --| Help Messages -------------
 pub const HELP_BACKUP_MSG: &str = "This will create a compressed backup of your original config (always best to have a backup), and relocate it to a new directory.";

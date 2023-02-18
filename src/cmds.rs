@@ -155,7 +155,6 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
                     settings.write_settings().expect(ERR_SETTINGS_WRITE);
 
                     let setup_complete = RGB(146, 181, 95).paint(INFO_SETUP_COMPLETE);
-                    println!(" ");
                     info!("{}\n", setup_complete);
                 } else {
                     error!("Error adding new config: {} {name:?} {nvim_tmp:?} {description:?}", settings.configs_path.to_str().unwrap());
@@ -178,10 +177,8 @@ pub(crate) fn initiate_backup(name: &Option<String>, settings: &mut RwLockWriteG
     let config_path = PathBuf::from_str(settings.configs_path.to_str().unwrap()).ok().unwrap();
     let config_file = std::fs::read_to_string(config_path).expect(ERR_CONFIGS_READ);
     let configs: Configs = serde_json::from_str(&config_file).expect(ERR_CONFIGS_PARSE);
-
     let config_name: String;
     
-
     if let Some(n) = name {
         config_name = n.to_string();
     } else {
@@ -357,15 +354,18 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
     match create_backup(nvim_path, backup_path) {
         Ok(_) => {
             if backup_path.exists() {
-                let backup_success = RGB(146, 181, 95).paint("Backup created successfully");
+                let backup_success = RGB(146, 181, 95).paint(INFO_BACKUP_COMPLETE);
 
-                println!(" ");
                 info!("{}\n", backup_success);
-                info!("Moving original config to: {:?}", new_config_path);
+                info!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path);
 
                 std::fs::create_dir_all(new_config_path)?;
-      
+                
+                #[cfg(not(target_os = "windows"))]     
                 move_dir(nvim_path, new_config_path, &CopyOptions::new().copy_inside(true))?;
+               
+                #[cfg(target_os = "windows")]
+                fs_extra::copy_items(&[nvim_path], new_config_path, &CopyOptions::new().copy_inside(true))?;
             } else {
                 error!("Error creating backup");
                 return Err(anyhow!("Error creating backup"));
