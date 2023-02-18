@@ -354,10 +354,10 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
     match create_backup(nvim_path, backup_path) {
         Ok(_) => {
             if backup_path.exists() {
-                let backup_success = RGB(146, 181, 95).paint("Backup created successfully");
+                let backup_success = RGB(146, 181, 95).paint(INFO_BACKUP_COMPLETE);
 
                 info!("{}\n", backup_success);
-                info!("Moving original config to: {:?}", new_config_path);
+                info!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path);
 
                 std::fs::create_dir_all(new_config_path)?;
       
