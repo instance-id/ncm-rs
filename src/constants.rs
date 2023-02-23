@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![allow(unused_assignments)]
 
 // --| Environment Variables ------
@@ -109,6 +110,16 @@ pub const ERR_DIR_CACHE: &str = "Could not create cache directory";
 pub const ERR_DIR_CONFIG_VERIFICATION: &str = "No init.lua or init.vim found in new config path";
 pub const ERR_DIR_DATA_VERIFICATION: &str = "Data directory path is not correct";
 pub const ERR_DIR_CACHE_VERIFICATION: &str = "Cache directory path is not correct";
+
+pub const ERR_NVIM_NOT_FOUND: &str = "Could not find nvim configuration in the expected location.";
+pub const ERR_NVIM_NOT_FOUND_WIN: &str = "Could not find nvim configuration in the expected location. ($LOCALAPPDATA\\nvim)";
+pub const ERR_NVIM_NOT_FOUND_WIN_XDG: &str = "$XDG_CONFIG_HOME appears to be set, but an nvim configuration was not found.";
+pub const ERR_NVIM_NOT_FOUND_WIN_NO_XDG: &str = "Is it located in $USERPROFILE\\.config\\nvim but XDG_CONFIG_HOME is not set?";
+
+pub const ERR_NVIM_NOT_FOUND_WIN_DATA: &str = "Could not find nvim data in the expected location. ($LOCALAPPDATA\\nvim-data)";
+
+pub const ERR_NVIM_NOT_FOUND_LINUX: &str = "Could not find nvim configuration in the expected location. ($XDG_CONFIG_HOME/nvim)";
+pub const ERR_NVIM_NOT_FOUND_LINUX_NO_XDG: &str = "It appears that XDG_CONFIG_HOME is not set";
 
 pub const ERR_READ_FILE: &str = "Failed to read file";
 pub const ERR_RUN_SETUP: &str = "Please run 'ncm setup' to configure NCM, or follow the manual setup instructions at https://github.com/instance-id/ncm-rs";

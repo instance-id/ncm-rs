@@ -27,7 +27,7 @@ use crate::paths::EnvVariables;
 
 // --| Global Settings ---------------------
 lazy_static! {
-    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(&EnvVariables::default()).clone());
+    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(&EnvVariables::default()));
 }
 
 fn main() -> Result<()> {

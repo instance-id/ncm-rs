@@ -93,14 +93,14 @@ pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard
     let data_path = PathBuf::from_str(&cfg.data_path.unwrap()).ok();
     let cache_path = PathBuf::from_str(&cfg.cache_path.unwrap()).ok();
 
-    let config_buf = config_path.clone().unwrap();
+    let config_buf = config_path.unwrap();
     let cfg_str = config_buf.to_str().unwrap();
 
-    let mut data_buf = data_path.clone().unwrap();
+    let mut data_buf = data_path.unwrap();
     data_buf.push(&name_str);
     let data_str = data_buf.to_str().unwrap();
 
-    let mut cache_buf = cache_path.clone().unwrap();
+    let mut cache_buf = cache_path.unwrap();
     cache_buf.push(&name_str);
     let cache_str = cache_buf.to_str().unwrap();
 
@@ -124,10 +124,6 @@ pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard
     } else {
         error!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
     }
-}
-
-fn get_os_local() -> String {
-    if cfg!(windows) { WIN_DATA.to_string() } else { DATA.to_string() }
 }
 
 // --| Verify Original Config Directory ---------
@@ -208,10 +204,38 @@ pub(crate) fn list_configs(config_json: &str) {
     table.printstd();
 }
 
+fn check_for_nvim(nvim_path: &Path) -> bool {
+    if !nvim_path.exists() { return false; }
+
+    let file_one = nvim_path.join(INIT_LUA);
+    let file_two = nvim_path.join(INIT_VIM);
+
+    if !file_one.exists() && !file_two.exists() { return false; }
+    true
+}
+
 // --| Setup -------------------------------
 // --|--------------------------------------
 pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_complete: bool) -> Result<()> {
     let mut nvim_symlinked: bool = false;
+
+    if !check_for_nvim(&settings.nvim_path) {
+        if !&settings.xdg_config_is_set {
+            if cfg!(windows) {
+                error!("{} {} ", ERR_NVIM_NOT_FOUND_WIN, ERR_NVIM_NOT_FOUND_WIN_NO_XDG);
+            } else {
+                error!("{} {} ", ERR_NVIM_NOT_FOUND_LINUX, ERR_NVIM_NOT_FOUND_LINUX_NO_XDG);
+            }
+        } else {
+            if cfg!(windows) {
+                error!("{} {} ", ERR_NVIM_NOT_FOUND, ERR_NVIM_NOT_FOUND_WIN_XDG);
+            } else {
+                error!("{}", ERR_NVIM_NOT_FOUND_LINUX);
+            }
+            return Err(anyhow!("{}: {:?}", ERR_NVIM_NOT_FOUND, settings.nvim_path));
+        }
+        return Err(anyhow!("{}: {:?}", ERR_NVIM_NOT_FOUND, settings.nvim_path));
+    }
 
     if settings.nvim_path.is_symlink() {
         nvim_symlinked = true;

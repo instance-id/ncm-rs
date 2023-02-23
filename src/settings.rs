@@ -20,6 +20,8 @@ pub struct Settings {
     pub env_vars: EnvVariables,
     pub base_paths: GenericPaths,
     pub settings_map: HashMap<String, HashMap<String, Option<String>>>,
+    pub xdg_data_is_set: bool,
+    pub xdg_config_is_set: bool,
 }
 
 impl Settings {
@@ -36,6 +38,8 @@ impl Settings {
             settings_path: PathBuf::new(),
             base_paths: GenericPaths::default(),
             env_vars: env_vars.clone(),
+            xdg_data_is_set: false,
+            xdg_config_is_set: false,
         }
     }
 
