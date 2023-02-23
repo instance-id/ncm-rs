@@ -2,6 +2,7 @@
 
 // --| Environment Variables ------
 pub const HOME: &str = "HOME";
+pub const USERPROFILE: &str = "USERPROFILE";
 pub const APP_DATA_LOCAL: &str = "LOCALAPPDATA";
 
 // XDG_* are not a standard environment variables on Windows

@@ -35,7 +35,7 @@ pub struct EnvVariables {
 impl Default for EnvVariables {
     fn default() -> Self {
         EnvVariables {
-            home: if cfg!(windows) { String::from(APP_DATA_LOCAL) } else { String::from(HOME) },
+            home: if cfg!(windows) { String::from(USERPROFILE) } else { String::from(HOME) },
             xdg_data_home: String::from(XDG_DATA_HOME),
             xdg_cache_home: String::from(XDG_CACHE_HOME),
             xdg_state_home: String::from(XDG_STATE_HOME),
@@ -109,16 +109,35 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
 
     if cfg!(target_os = "windows")
     {
-        let win_path = PathBuf::from(var(&settings.env_vars.app_data_local).unwrap_or_else(|_| {
-            var(&settings.env_vars.home).unwrap() 
+        let win_path = PathBuf::from(var(&settings.env_vars.home).unwrap_or_else(|_| {
+            var(&settings.env_vars.app_data_local).unwrap() 
+        }));
+
+        info!("Windows detected, win_path as home: {:?}", win_path);
+
+        config = PathBuf::from(var(&settings.env_vars.xdg_config_home).unwrap_or_else(|_| {
+            var(&settings.env_vars.app_data_local).unwrap()
+        }));
+
+        local = PathBuf::from(var(&settings.env_vars.xdg_data_home).unwrap_or_else(|_| {
+            var(&settings.env_vars.app_data_local).unwrap()
+        }));
+
+        cache = PathBuf::from(var(&settings.env_vars.xdg_cache_home).unwrap_or_else(|_| {
+            var(&settings.env_vars.app_data_local).unwrap()
+        }));
+
+        state = PathBuf::from(var(&settings.env_vars.xdg_state_home).unwrap_or_else(|_| {
+            var(&settings.env_vars.app_data_local).unwrap()
         }));
 
         info!("Windows detected, using APPDATA_LOCAL as base path: {:?}", win_path); 
+        info!("Windows paths: config: {:?}, local: {:?}, cache: {:?}, state: {:?}", config, local, cache, state)
         
-        config = win_path.clone();
-        local = win_path.clone();
-        cache = win_path.clone();
-        state = win_path;
+        // config = win_path.clone();
+        // local = win_path.clone();
+        // cache = win_path.clone();
+        // state = win_path;
     } else {
         config = PathBuf::from(var(&settings.env_vars.xdg_config_home).unwrap_or_else(|_| {
             var(&settings.env_vars.home).unwrap() + XDG_CONFIG_HOME_PATH
