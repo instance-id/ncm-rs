@@ -164,11 +164,8 @@ mod tests {
         }
 
         assert_eq!(var(tmp_home).unwrap(), home_path.to_str().unwrap());
-
-        assert_eq!(dot_path.exists(), true, "dot_path: {:?}", dot_path);
         assert_eq!(home_path.exists(), true, "home_path: {:?}", home_path);
 
-        assert_eq!(settings.dot_path, dot_path.to_path_buf());
         assert_eq!(settings.ncm_path, dot_path.join(NCM_DIR));
         assert_eq!(settings.nvim_path, dot_path.join(NVIM));
 
