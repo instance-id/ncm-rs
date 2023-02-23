@@ -84,12 +84,12 @@ pub fn get_settings(env_vars: &EnvVariables) -> Settings {
     let mut settings = get_base_paths(&mut settings);
     let nvim_paths = get_nvim_paths(settings);
 
-    settings.ncm_path = settings.base_paths.config.join(NCM_DIR);
-    settings.data_path = settings.base_paths.local.join(NCM_DATA);
-    settings.cache_path = settings.base_paths.cache.join(NCM_DATA);
-    
     settings.dot_path = settings.base_paths.config.to_owned();
+    settings.ncm_path = settings.base_paths.config.join(NCM_DIR);
+    
+    settings.data_path = nvim_paths.local;
     settings.nvim_path = nvim_paths.config;
+    settings.cache_path = nvim_paths.cache;
 
     settings.settings_path.push(&settings.ncm_path);
     settings.settings_path.push(SETTINGS_FILE);
