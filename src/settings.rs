@@ -35,14 +35,7 @@ impl Settings {
             configs_path: PathBuf::new(),
             settings_path: PathBuf::new(),
             base_paths: GenericPaths::default(),
-            env_vars: EnvVariables {
-                home: env_vars.home.clone(),
-                xdg_data_home: env_vars.xdg_data_home.clone(),
-                xdg_cache_home: env_vars.xdg_cache_home.clone(),
-                xdg_state_home: env_vars.xdg_state_home.clone(),
-                xdg_config_home: env_vars.xdg_config_home.clone(),
-                app_data_local: env_vars.app_data_local.clone(),
-            },
+            env_vars: env_vars.clone(),
         }
     }
 
