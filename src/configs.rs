@@ -87,17 +87,18 @@ pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> Result<(
     } else { error!("{}", ERR_DIR_DATA); }
 
     // --| Create .cache data path for config ---
-    let cache_path = &config_data.cache_path.clone();
-    if cache_path.is_some() {
-        let mut path = PathBuf::from(cache_path.as_ref().unwrap());
-        path.push(name);
+    if !cfg!(target_os = "windows") {
+        let cache_path = &config_data.cache_path;
+        if cache_path.is_some() {
+            let mut path = PathBuf::from(cache_path.as_ref().unwrap());
+            path.push(name);
 
-        if !path.exists() {
-            info!("{}: {}", INFO_DIR_CACHE, path.to_str().unwrap());
-            std::fs::create_dir_all(&path).expect(ERR_DIR_UCREATE);
-        }
-    } else { error!("{}", ERR_DIR_CACHE); }
-
+            if !path.exists() {
+                info!("{}: {}", INFO_DIR_CACHE, path.to_str().unwrap());
+                std::fs::create_dir_all(&path).expect(ERR_DIR_UCREATE);
+            }
+        } else { error!("{}", ERR_DIR_CACHE); }
+    }
 
     let mut configs: Configs = serde_json::from_str(&config_file)?;
     configs.configs.push(config_data);
@@ -137,7 +138,7 @@ pub(crate) fn create_symlink(nvim_path: PathBuf, new_config: PathBuf) -> anyhow:
     if !new_config.exists() {
         return Err(anyhow!(format!("{}: {}", ERR_CONFIGS_PATH, new_config.to_str().unwrap())));
     }
-    
+
     match (&nvim_path.exists(), &nvim_path.is_dir(), true) {
         (true, true, true) => std::fs::remove_dir_all(&nvim_path)?,
         (true, false, true) => std::fs::remove_file(&nvim_path)?,
@@ -238,7 +239,10 @@ mod tests {
         let config = config.unwrap();
         assert_eq!(config.name, "test");
         assert_eq!(config.path, tmp_data_dir.join("config_two").to_str().unwrap());
-        assert_eq!(config.cache_path.unwrap(), tmp_cache_dir.join("config_two_cache").to_str().unwrap());
+
+        if !cfg!(target_os = "windows") {
+            assert_eq!(config.cache_path.unwrap(), tmp_cache_dir.join("config_two_cache").to_str().unwrap());
+        }
 
         let config_file = std::fs::read_to_string(config_file.to_str().unwrap()).expect("Failed to read file");
         let configs: Configs = serde_json::from_str(&config_file).expect("Failed to parse json");
