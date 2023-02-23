@@ -148,10 +148,10 @@ mod tests {
     fn run_get_config(dir: PathBuf, dot_path: &mut Path, home_path: &mut Path, tmp_config_home: &str, tmp_home: &str) {
         let env_vars = EnvVariables {
             home: tmp_home.to_string(),
+            app_data_local: tmp_home.to_string(),
             xdg_data_home: tmp_config_home.to_string(),
             xdg_cache_home: tmp_config_home.to_string(),
             xdg_state_home: tmp_config_home.to_string(),
-            app_data_local: tmp_config_home.to_string(),
             xdg_config_home: tmp_config_home.to_string(),
         };
 
@@ -168,7 +168,6 @@ mod tests {
 
         assert_eq!(settings.ncm_path, dot_path.join(NCM_DIR));
         assert_eq!(settings.nvim_path, dot_path.join(NVIM));
-
 
         assert_eq!(settings.settings_path, dot_path.join(NCM_DIR).join(SETTINGS_FILE));
         assert_eq!(settings.configs_path, dot_path.join(NCM_DIR).join(CONFIGS_FILE));
