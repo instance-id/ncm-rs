@@ -40,16 +40,12 @@ fn main() -> Result<()> {
 
     // --| Check if setup is needed --------
     if cmds::check_setup(settings, setup_complete).is_err() {
-
         return Ok(());
     }
 
     let config_json = &settings.configs_path.to_str().unwrap().to_string();
     let data_path = Option::from(settings.data_path.to_str().unwrap().to_string());
     let cache_path = Option::from(settings.cache_path.to_str().unwrap().to_string());
-
-    info!("{}", format!("Data Path: {}", data_path.clone().unwrap()));
-    info!("{}", format!("Cache Path: {}", cache_path.clone().unwrap()));
 
     // --| Parse Arguments -----------------
     let args = NvCfgArgs::parse();

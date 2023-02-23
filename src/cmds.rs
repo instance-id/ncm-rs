@@ -245,45 +245,41 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
         info!("{}", INFO_NEW_SETUP);
 
         // --| Backup original and move to new location
-        match backup_original(settings) {
-            Ok(backup_info) => {
-                let mut nvim_tmp = PathBuf::new();
-                let name = backup_info.name.as_str();
-                let description: Option<String> = Some(DEFAULT_CONFIG_DESC.to_owned());
-                let data_path: Option<String> = Some(settings.data_path.to_str().unwrap().to_string());
-                let cache_path: Option<String> = Some(settings.cache_path.to_str().unwrap().to_string());
+        if let Ok(backup_info) = backup_original(settings) {
+            let mut nvim_tmp = PathBuf::new();
+            let name = backup_info.name.as_str();
+            let description: Option<String> = Some(DEFAULT_CONFIG_DESC.to_owned());
+            let data_path: Option<String> = Some(settings.data_path.to_str().unwrap().to_string());
+            let cache_path: Option<String> = Some(settings.cache_path.to_str().unwrap().to_string());
 
-                nvim_tmp.push(backup_info.path.as_str());
-                nvim_tmp.push(backup_info.name.as_str());
+            nvim_tmp.push(backup_info.path.as_str());
+            nvim_tmp.push(backup_info.name.as_str());
 
-                if configs::add_config(
-                    settings.configs_path.to_str().unwrap(),
-                    ConfigData {
-                        name: name.parse()?,
-                        path: nvim_tmp.to_str().unwrap().to_string(),
-                        description: description.clone(),
-                        data_path,
-                        cache_path,
-                    },
-                ).is_ok() {
-                    load_config(&Some(name.to_string()), settings);
-                    info!("{}: {name:?} {nvim_tmp:?}", INFO_CONFIGS_ADDED);
+            if configs::add_config(
+                settings.configs_path.to_str().unwrap(),
+                ConfigData {
+                    name: name.parse()?,
+                    path: nvim_tmp.to_str().unwrap().to_string(),
+                    description: description.clone(),
+                    data_path,
+                    cache_path,
+                },
+            ).is_ok() {
+                load_config(&Some(name.to_string()), settings);
+                info!("{}: {name:?} {nvim_tmp:?}", INFO_CONFIGS_ADDED);
 
-                    settings.settings
-                        .set(NCM, SETUP_COMPLETE, Some("true".to_string()))
-                        .expect(ERR_SETTINGS_WRITE);
+                settings.settings
+                    .set(NCM, SETUP_COMPLETE, Some("true".to_string()))
+                    .expect(ERR_SETTINGS_WRITE);
 
-                    settings.write_settings().expect(ERR_SETTINGS_WRITE);
+                settings.write_settings().expect(ERR_SETTINGS_WRITE);
 
-                    let setup_complete = RGB(146, 181, 95).paint(INFO_SETUP_COMPLETE);
-                    info!("{}\n", setup_complete);
-                } else {
-                    error!("{}: {} {name:?} {nvim_tmp:?} {description:?}", ERR_CONFIGS_ADD, settings.configs_path.to_str().unwrap());
-                }
+                let setup_complete = RGB(146, 181, 95).paint(INFO_SETUP_COMPLETE);
+                info!("{}\n", setup_complete);
+            } else {
+                error!("{}: {} {name:?} {nvim_tmp:?} {description:?}", ERR_CONFIGS_ADD, settings.configs_path.to_str().unwrap());
             }
-            Err(e) => {
-                error!("{}: {:?}", ERR_BACKUP_CREATE, e);
-            }
+            return Ok(());
         }
     } else {
         settings.check_directories().expect("Error creating directories");
