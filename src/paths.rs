@@ -114,8 +114,6 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
             var(&settings.env_vars.home).unwrap() + APP_DATA_LOCAL_PATH
         }));
 
-        info!("Windows detected, win_path as home: {:?}", win_path);
-
         match var(&settings.env_vars.xdg_config_home) {
             Ok(value) => {
                 config = PathBuf::from(value);

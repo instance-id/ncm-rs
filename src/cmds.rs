@@ -222,15 +222,15 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
     if !check_for_nvim(&settings.nvim_path) {
         if !&settings.xdg_config_is_set {
             if cfg!(windows) {
-                error!("{} {} ", ERR_NVIM_NOT_FOUND_WIN, ERR_NVIM_NOT_FOUND_WIN_NO_XDG);
+                warn!("{} {} ", ERR_NVIM_NOT_FOUND_WIN, ERR_NVIM_NOT_FOUND_WIN_NO_XDG);
             } else {
-                error!("{} {} ", ERR_NVIM_NOT_FOUND_LINUX, ERR_NVIM_NOT_FOUND_LINUX_NO_XDG);
+                warn!("{} {} ", ERR_NVIM_NOT_FOUND_LINUX, ERR_NVIM_NOT_FOUND_LINUX_NO_XDG);
             }
         } else {
             if cfg!(windows) {
-                error!("{} {} ", ERR_NVIM_NOT_FOUND, ERR_NVIM_NOT_FOUND_WIN_XDG);
+                warn!("{} {} ", ERR_NVIM_NOT_FOUND, ERR_NVIM_NOT_FOUND_WIN_XDG);
             } else {
-                error!("{}", ERR_NVIM_NOT_FOUND_LINUX);
+                warn!("{}", ERR_NVIM_NOT_FOUND_LINUX);
             }
             return Err(anyhow!("{}: {:?}", ERR_NVIM_NOT_FOUND, settings.nvim_path));
         }
