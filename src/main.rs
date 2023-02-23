@@ -4,6 +4,7 @@ mod logger;
 mod configs;
 mod settings;
 mod constants;
+mod paths;
 
 use constants::*;
 use crate::cmds::{Commands, NvCfgArgs};
@@ -22,12 +23,11 @@ extern crate prettytable;
 extern crate lazy_static;
 
 use std::sync::{RwLock};
+use crate::paths::EnvVariables;
 
 // --| Global Settings ---------------------
 lazy_static! {
-    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(
-        XDG_CONFIG_HOME, if cfg!(windows) { APP_DATA_LOCAL } else { HOME }
-    ));
+    pub static ref SETTINGS: RwLock<settings::Settings> = RwLock::new(settings::get_settings(&EnvVariables::default()).clone());
 }
 
 fn main() -> Result<()> {
@@ -45,6 +45,11 @@ fn main() -> Result<()> {
     }
 
     let config_json = &settings.configs_path.to_str().unwrap().to_string();
+    let data_path = Option::from(settings.data_path.to_str().unwrap().to_string());
+    let cache_path = Option::from(settings.cache_path.to_str().unwrap().to_string());
+
+    info!("{}", format!("Data Path: {}", data_path.clone().unwrap()));
+    info!("{}", format!("Cache Path: {}", cache_path.clone().unwrap()));
 
     // --| Parse Arguments -----------------
     let args = NvCfgArgs::parse();
@@ -52,7 +57,7 @@ fn main() -> Result<()> {
     match &args.command {
         // --| Add Command -----------------
         Commands::Add { name, path, description } => {
-            cmds::add_config(name, path, description, config_json);
+            cmds::add_config(name, path, description, data_path, cache_path, config_json);
         }
 
         // --| Remove Command --------------
@@ -67,7 +72,7 @@ fn main() -> Result<()> {
 
         // --| Load Command ----------------
         Commands::Load { name } => {
-            cmds::load_config(name, &mut settings.nvim_path, config_json);
+            cmds::load_config(name, settings);
         }
 
         // --| Backup Command --------------

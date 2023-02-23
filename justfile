@@ -12,6 +12,7 @@ set windows-shell := ["pwsh.exe","-NoLogo", "-noprofile", "-c"]
 
 newExe := "ncm"
 originalExe := "ncm-rs"
+configPath := "nvim-ncm"
 targetPath := "./target/release/"
 releasePath := "./target/release/ncm"
 installPath :=  "/.local/bin/"
@@ -67,22 +68,50 @@ _install-macos: build
 reset:
 	just _reset-{{os()}}
 
-# --| Linux
+# @formatter:off
+# --| Linux 
 _reset-linux:
-  test -L ~/.config/nvim && rm ~/.config/nvim || true
-  mv ~/.config/nvim_configs/nvim ~/.config/ || true
-  rm -rf ~/.config/nvim_configs || true
-  rm -rf ~/.config/ncm-rs || true
+  test -L ~/.cache/nvim       && rm ~/.cache/nvim       || true
+  test -L ~/.config/nvim      && rm ~/.config/nvim      || true
+  test -L ~/.local/share/nvim && rm ~/.local/share/nvim || true
+
+  mv "$HOME/.cache/nvim-ncm/main"       "$HOME/.cache/nvim-ncm/nvim"       && mv "$HOME/.cache/nvim-ncm/nvim"       ~/.cache/       || true
+  mv "$HOME/.config/nvim-ncm/main"      "$HOME/.config/nvim-ncm/nvim"      && mv "$HOME/.config/nvim-ncm/nvim"      ~/.config/      || true
+  mv "$HOME/.local/share/nvim-ncm/main" "$HOME/.local/share/nvim-ncm/nvim" && mv "$HOME/.local/share/nvim-ncm/nvim" ~/.local/share/ || true
+
+  rm -rf "$HOME/.cache/nvim-ncm"       || true
+  rm -rf "$HOME/.config/nvim-ncm"      || true
+  rm -rf "$HOME/.local/share/nvim-ncm" || true
+
+  rm -rf $HOME/.config/ncm-rs || true
+  echo "Reset Complete! {{configPath}}"
 
 # --| Windows
 _reset-windows:
   #!{{shebang}}
-  $cfg = "C:\$($env:HOMEPATH)/.config"
+  $homePath = $env:HOMEPATH
+  $localAppData = $env:LOCALAPPDATA
+  $cfg = if($env:XDG_CONFIG_HOME -ne $null) { $env:XDG_CONFIG_HOME } else { $env:LOCALAPPDATA }
+  $dataDir = if($env:XDG_DATA_HOME -ne $null) { $env:XDG_DATA_HOME } else { $env:LOCALAPPDATA }
+  $cacheDir = if($env:XDG_CACHE_HOME -ne $null) { $env:XDG_CACHE_HOME } else { $env:LOCALAPPDATA }
+  #
   $nvimDir = "${cfg}\nvim"
-  $nvCustom = "${cfg}\nvim_configs\nvim"
+  $nvimData = "${dataDir}\nvim-data"
+  $nvimCache = "${cacheDir}\nvim"
+  #
+  $nvCustom = "${cfg}\{{configPath}}\nvim"
+  $nvCustomData = "${dataDir}\{{configPath}}\main"
+  $nvCustomCache = "${cacheDir}\{{configPath}}\main"
+  #
   if (Get-Item -Path "${nvimDir}" | Select-Object -ExpandProperty LinkType) { rm $nvimDir } else {return}
-  if (test-path $nvCustom && !test-path "${nvimDir}") { mv "${nvCustom}" "${cfg}\"; }
-  rm -force -recurse "${cfg}\nvim_configs"; 
+  if (Get-Item -Path "${$nvimData}" | Select-Object -ExpandProperty LinkType) { rm $nvimData } else {return}
+  if (Get-Item -Path "${$nvimCache}" | Select-Object -ExpandProperty LinkType) { rm $nvimCache } else {return}
+  #
+  if (test-path $nvCustom && !test-path "${nvimDir}") { mv "${nvCustom}" "${cfg}\\" }
+  if (test-path $nvCustomData && !test-path "${nvimData}") { mv "${nvCustomData}" "${nvimData}\\" }
+  if (test-path $nvCustomCache && !test-path "${nvimCache}") { mv "${nvCustomCache}" "${nvimCache}\\" }
+  #
+  rm -force -recurse "${cfg}\{{configPath}}"; 
   rm -force -recurse "${cfg}\ncm-rs"; 
   
 # --| MacOS

@@ -1,4 +1,3 @@
-use std::env::var;
 use std::io::Write;
 use std::path::{PathBuf};
 use configparser::ini::Ini;
@@ -6,6 +5,7 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 
 use crate::constants::*;
+use crate::paths::*;
 
 #[derive(Debug, Clone)]
 pub struct Settings {
@@ -13,36 +13,51 @@ pub struct Settings {
     pub ncm_path: PathBuf,
     pub dot_path: PathBuf,
     pub nvim_path: PathBuf,
+    pub data_path: PathBuf,
+    pub cache_path: PathBuf,
     pub configs_path: PathBuf,
     pub settings_path: PathBuf,
+    pub env_vars: EnvVariables,
+    pub base_paths: GenericPaths,
     pub settings_map: HashMap<String, HashMap<String, Option<String>>>,
 }
 
 impl Settings {
-    pub fn new() -> Settings {
+    pub fn new(env_vars: &EnvVariables) -> Settings {
         Settings {
             settings: Ini::new(),
             ncm_path: PathBuf::new(),
             dot_path: PathBuf::new(),
             nvim_path: PathBuf::new(),
+            data_path: PathBuf::new(),
+            cache_path: PathBuf::new(),
             settings_map: HashMap::new(),
             configs_path: PathBuf::new(),
             settings_path: PathBuf::new(),
+            base_paths: GenericPaths::default(),
+            env_vars: EnvVariables {
+                home: env_vars.home.clone(),
+                xdg_data_home: env_vars.xdg_data_home.clone(),
+                xdg_cache_home: env_vars.xdg_cache_home.clone(),
+                xdg_state_home: env_vars.xdg_state_home.clone(),
+                xdg_config_home: env_vars.xdg_config_home.clone(),
+                app_data_local: env_vars.app_data_local.clone(),
+            },
         }
     }
 
     pub fn check_directories(&mut self) -> Result<()> {
-        if !self.ncm_path.exists() {
-            std::fs::create_dir_all(&self.ncm_path)?;
-        }
+        if !self.ncm_path.exists()   { std::fs::create_dir_all(&self.ncm_path)?; }
+        if !self.data_path.exists()  { std::fs::create_dir_all(&self.data_path)?; }
+        if !self.cache_path.exists() { std::fs::create_dir_all(&self.cache_path)?; }
 
         if !self.settings_path.exists() {
             std::fs::create_dir_all(self.settings_path.parent().unwrap())?;
             self.settings.read(String::from(
                 "[ncm]
                     setup_complete = false
-            backup_path=none")).expect("Unable to read settings file");
-            self.settings.write(&self.settings_path).expect("Unable to write settings file");
+            backup_path=none")).expect(ERR_SETTINGS_UREAD);
+            self.settings.write(&self.settings_path).expect(ERR_SETTINGS_UWRITE);
         }
 
         if !self.configs_path.exists() {
@@ -56,43 +71,28 @@ impl Settings {
 
     pub fn write_settings(&mut self) -> Result<()> {
         if self.settings.write(&self.settings_path).is_err() {
-            Err(anyhow!("Unable to write settings file"))
+            Err(anyhow!(ERR_SETTINGS_UWRITE))
         } else { Ok(()) }
     }
 }
 
 impl Default for Settings {
-    fn default() -> Self {
-        Settings::new()
-    }
+    fn default() -> Self { Settings::new(&EnvVariables::default()) }
 }
 
 // --| Create and load Settings -----------------
-pub fn get_settings(config_home: &str, home: &str) -> Settings {
-    let mut settings = Settings::new();
+// pub fn get_settings(config_home: &str, home: &str) -> Settings {
+pub fn get_settings(env_vars: &EnvVariables) -> Settings {
+    let mut settings = Settings::new(env_vars);
+    let mut settings = get_base_paths(&mut settings);
+    let nvim_paths = get_nvim_paths(settings);
 
-    // --| Use XDG_CONFIG_HOME is set, else -----
-    // --| use $HOME/.config or $LOCALAPPDATA ---
-    if let Ok(cfg) = var(config_home) {
-        
-        settings.dot_path.push(&cfg);
-        settings.ncm_path.push(&settings.dot_path);
-        settings.ncm_path.push(NCM_DIR);
-
-        settings.nvim_path.push(&settings.dot_path);
-        settings.nvim_path.push("nvim");
-    } else {
-        settings.dot_path.push(var(home).unwrap());
-
-        // --| Windows doesn't use .config
-        if !cfg!(windows) { settings.dot_path.push(".config"); }
-
-        settings.ncm_path.push(&settings.dot_path);
-        settings.ncm_path.push(NCM_DIR);
-
-        settings.nvim_path.push(&settings.dot_path);
-        settings.nvim_path.push("nvim");
-    }
+    settings.ncm_path = settings.base_paths.config.join(NCM_DIR);
+    settings.data_path = settings.base_paths.local.join(NCM_DATA);
+    settings.cache_path = settings.base_paths.cache.join(NCM_DATA);
+    
+    settings.dot_path = settings.base_paths.config.to_owned();
+    settings.nvim_path = nvim_paths.config;
 
     settings.settings_path.push(&settings.ncm_path);
     settings.settings_path.push(SETTINGS_FILE);
@@ -100,20 +100,20 @@ pub fn get_settings(config_home: &str, home: &str) -> Settings {
     settings.configs_path.push(&settings.ncm_path);
     settings.configs_path.push(CONFIGS_FILE);
 
-    settings.check_directories().expect("Unable to create directories");
+    settings.check_directories().expect(ERR_DIR_UCREATE);
     settings.settings.load(&settings.settings_path).unwrap();
 
     let mut config = Ini::new();
     let map = config.load(&settings.settings_path).unwrap();
     settings.settings_map = map;
-    settings
+    settings.to_owned()
 }
 
 // --| Tests ------------------------------------
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env::set_var;
+    use std::env::{set_var, var};
     use std::path::{Path, PathBuf};
     use pretty_assertions::assert_eq;
 
@@ -153,7 +153,16 @@ mod tests {
     }
 
     fn run_get_config(dir: PathBuf, dot_path: &mut Path, home_path: &mut Path, tmp_config_home: &str, tmp_home: &str) {
-        let settings = get_settings(tmp_config_home, tmp_home);
+        let env_vars = EnvVariables {
+            home: tmp_home.to_string(),
+            xdg_data_home: tmp_config_home.to_string(),
+            xdg_cache_home: tmp_config_home.to_string(),
+            xdg_state_home: tmp_config_home.to_string(),
+            app_data_local: tmp_config_home.to_string(),
+            xdg_config_home: tmp_config_home.to_string(),
+        };
+
+        let settings = get_settings(&env_vars);
 
         if var(tmp_config_home).is_ok() {
             assert_eq!(var(tmp_config_home).unwrap(), dot_path.to_str().unwrap());
@@ -161,12 +170,12 @@ mod tests {
 
         assert_eq!(var(tmp_home).unwrap(), home_path.to_str().unwrap());
 
-        assert!(dot_path.exists());
-        assert!(home_path.exists());
+        assert_eq!(dot_path.exists(), true, "dot_path: {:?}", dot_path);
+        assert_eq!(home_path.exists(), true, "home_path: {:?}", home_path);
 
         assert_eq!(settings.dot_path, dot_path.to_path_buf());
         assert_eq!(settings.ncm_path, dot_path.join(NCM_DIR));
-        assert_eq!(settings.nvim_path, dot_path.join("nvim"));
+        assert_eq!(settings.nvim_path, dot_path.join(NVIM));
 
 
         assert_eq!(settings.settings_path, dot_path.join(NCM_DIR).join(SETTINGS_FILE));
