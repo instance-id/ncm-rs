@@ -131,14 +131,14 @@ pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard
 // --| Verify Original Config Directory ---------
 fn verify_config_directory(nvim_path: &Path, new_path: &PathBuf) -> Result<()> {
     if !nvim_path.ends_with(NVIM) && !nvim_path.parent().unwrap().ends_with(CONFIG) {
-        Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?;
     }
 
     let file_one = new_path.join(INIT_LUA);
     let file_two = new_path.join(INIT_VIM);
 
     if !file_one.exists() && !file_two.exists() {
-        Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?;
     }
     Ok(())
 }
@@ -146,15 +146,15 @@ fn verify_config_directory(nvim_path: &Path, new_path: &PathBuf) -> Result<()> {
 // --| Verify Original Data Directory -----------
 fn verify_data_directory(nvim_data: &PathBuf, new_path: &PathBuf, name: &str) -> Result<()> {
     if !nvim_data.exists() {
-        Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
     }
 
     if !nvim_data.ends_with(NVIM) && !nvim_data.parent().unwrap().ends_with(SHARE) {
-        Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
     }
 
     if !new_path.ends_with(name) && !new_path.parent().unwrap().ends_with(NCM_DATA) {
-        Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?;
     }
     Ok(())
 }
@@ -162,15 +162,15 @@ fn verify_data_directory(nvim_data: &PathBuf, new_path: &PathBuf, name: &str) ->
 // --| Verify Original Cache Path ---------------
 fn verify_cache_path(nvim_cache: &PathBuf, new_path: &PathBuf, name: &str) -> Result<()> {
     if !nvim_cache.exists() {
-        Err(anyhow!("{}: {:?}", ERR_DIR_CACHE_VERIFICATION, nvim_cache))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_CACHE_VERIFICATION, nvim_cache))?;
     }
 
     if !nvim_cache.ends_with(NVIM) && !nvim_cache.parent().unwrap().ends_with(CACHE) {
-        Err(anyhow!("{}: {:?}", ERR_DIR_CACHE_VERIFICATION, nvim_cache))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_CACHE_VERIFICATION, nvim_cache))?;
     }
 
     if !new_path.ends_with(name) && !new_path.parent().unwrap().ends_with(NCM_DATA) {
-        Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?;
+        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?;
     }
     Ok(())
 }
