@@ -245,7 +245,7 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
         info!("{}", INFO_NEW_SETUP);
 
         // --| Backup original and move to new location
-        if let Ok(backup_info) = backup_original(settings) {
+        return if let Ok(backup_info) = backup_original(settings) {
             let mut nvim_tmp = PathBuf::new();
             let name = backup_info.name.as_str();
             let description: Option<String> = Some(DEFAULT_CONFIG_DESC.to_owned());
@@ -279,7 +279,9 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
             } else {
                 error!("{}: {} {name:?} {nvim_tmp:?} {description:?}", ERR_CONFIGS_ADD, settings.configs_path.to_str().unwrap());
             }
-            return Ok(());
+            Ok(())
+        } else {
+            Err(anyhow!("{}", ERR_NOT_COMPLETE))
         }
     } else {
         settings.check_directories().expect("Error creating directories");

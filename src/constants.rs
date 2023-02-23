@@ -91,6 +91,8 @@ pub const HELP_CONFIG_PATH: &str = "This is the path in which your configuration
 pub const HELP_CONFIG_NAME: &str = "This will be used to identify your configuration when loading it.";
 
 // --| Error Messages ------------
+pub const ERR_NOT_COMPLETE: &str = "Did not complete setup";
+
 pub const ERR_BACKUP_CREATE: &str = "Error creating backup";
 pub const ERR_BACKUP_PATH: &str = "Could not set backup path";
 pub const ERR_BACKUP_MANUALLY: &str = "Please backup your original config manually. Instructions can be found at https://github.com/instance-id/ncm-rs";
