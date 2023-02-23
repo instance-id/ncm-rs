@@ -40,7 +40,7 @@ fn main() -> Result<()> {
 
     // --| Check if setup is needed --------
     if cmds::check_setup(settings, setup_complete).is_err() {
-        warn!("{}", ERR_RUN_SETUP);
+
         return Ok(());
     }
 

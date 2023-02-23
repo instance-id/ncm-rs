@@ -375,6 +375,7 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
         .unwrap();
 
     if !result {
+        warn!("{}", ERR_BACKUP_MANUALLY);
         return Err(anyhow!(ERR_BACKUP_MANUALLY));
     }
 
