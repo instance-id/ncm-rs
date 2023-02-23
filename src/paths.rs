@@ -109,35 +109,31 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
 
     if cfg!(target_os = "windows")
     {
-        let win_path = PathBuf::from(var(&settings.env_vars.home).unwrap_or_else(|_| {
-            var(&settings.env_vars.app_data_local).unwrap() 
+        let win_path = PathBuf::from(var(&settings.env_vars.app_data_local).unwrap_or_else(|_| {
+            var(&settings.env_vars.home).unwrap()  + APP_DATA_LOCAL_PATH
         }));
 
         info!("Windows detected, win_path as home: {:?}", win_path);
 
         config = PathBuf::from(var(&settings.env_vars.xdg_config_home).unwrap_or_else(|_| {
-            var(&settings.env_vars.app_data_local).unwrap()
+            win_path.to_str().unwrap().to_string() 
         }));
 
         local = PathBuf::from(var(&settings.env_vars.xdg_data_home).unwrap_or_else(|_| {
-            var(&settings.env_vars.app_data_local).unwrap()
+            win_path.to_str().unwrap().to_string()
         }));
 
         cache = PathBuf::from(var(&settings.env_vars.xdg_cache_home).unwrap_or_else(|_| {
-            var(&settings.env_vars.app_data_local).unwrap()
+            win_path.to_str().unwrap().to_string()
         }));
 
         state = PathBuf::from(var(&settings.env_vars.xdg_state_home).unwrap_or_else(|_| {
-            var(&settings.env_vars.app_data_local).unwrap()
+            win_path.to_str().unwrap().to_string()
         }));
 
         info!("Windows detected, using APPDATA_LOCAL as base path: {:?}", win_path); 
         info!("Windows paths: config: {:?}, local: {:?}, cache: {:?}, state: {:?}", config, local, cache, state)
-        
-        // config = win_path.clone();
-        // local = win_path.clone();
-        // cache = win_path.clone();
-        // state = win_path;
+
     } else {
         config = PathBuf::from(var(&settings.env_vars.xdg_config_home).unwrap_or_else(|_| {
             var(&settings.env_vars.home).unwrap() + XDG_CONFIG_HOME_PATH

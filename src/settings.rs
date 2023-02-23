@@ -156,6 +156,8 @@ mod tests {
         };
 
         let settings = get_settings(&env_vars);
+        
+        info!("settings: {:?}", settings);
 
         if var(tmp_config_home).is_ok() {
             assert_eq!(var(tmp_config_home).unwrap(), dot_path.to_str().unwrap());

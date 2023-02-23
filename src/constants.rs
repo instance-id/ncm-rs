@@ -20,7 +20,7 @@ pub const XDG_STATE_HOME_PATH: &str = "/.local/state";
 pub const XDG_CONFIG_HOME_PATH: &str = "/.config";
 
 // --| Windows -------------------
-pub const APP_DATA_LOCAL_PATH: &str = "AppData\\Local";
+pub const APP_DATA_LOCAL_PATH: &str = "\\AppData\\Local";
 
 // --| Settings Keys -------------
 pub const NCM: &str = "ncm";
