@@ -280,10 +280,11 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
                 info!("{}\n", setup_complete);
             } else {
                 error!("{}: {} {name:?} {nvim_tmp:?} {description:?}", ERR_CONFIGS_ADD, settings.configs_path.to_str().unwrap());
+                return Err(anyhow!("{}: {} {name:?} {nvim_tmp:?} {description:?}", ERR_CONFIGS_ADD, settings.configs_path.to_str().unwrap()));
             }
             Ok(())
         } else {
-            Err(anyhow!("{}", ERR_NOT_COMPLETE))
+           Err(anyhow!("{}", ERR_NOT_COMPLETE))
         };
     } else {
         settings.check_directories().expect("Error creating directories");
