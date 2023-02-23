@@ -99,7 +99,7 @@ _reset-windows:
   $nvimData = "${dataDir}\nvim-data"
   $nvimCache = "${cacheDir}\nvim"
   #
-  $nvCustom = "${cfg}\{{configPath}}\nvim"
+  $nvCustom = "${cfg}\{{configPath}}\main"
   $nvCustomData = "${dataDir}\{{configPath}}\main"
   $nvCustomCache = "${cacheDir}\{{configPath}}\main"
   #
