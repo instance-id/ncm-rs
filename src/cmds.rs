@@ -118,7 +118,7 @@ pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard
         error!("{}: {:?} - {}: {}", "System Data Path:   ", nvim_data, "Data Path:   ", data_str);
     }
 
-    if verify_cache_path(&nvim_cache, &cache_buf, &name_str).is_ok() {
+    if !cfg!(target_os = "windows") && verify_cache_path(&nvim_cache, &cache_buf, &name_str).is_ok() {
         debug!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
         configs::create_symlink(nvim_cache, cache_buf).expect(ERR_SYMLINK_CREATE);
     } else {
