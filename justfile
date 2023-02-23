@@ -89,8 +89,6 @@ _reset-linux:
 # --| Windows
 _reset-windows:
   #!{{shebang}}
-  $homePath = $env:HOMEPATH
-  $localAppData = $env:LOCALAPPDATA
   $cfg = if($env:XDG_CONFIG_HOME -ne $null) { $env:XDG_CONFIG_HOME } else { $env:LOCALAPPDATA }
   $dataDir = if($env:XDG_DATA_HOME -ne $null) { $env:XDG_DATA_HOME } else { $env:LOCALAPPDATA }
   $cacheDir = if($env:XDG_CACHE_HOME -ne $null) { $env:XDG_CACHE_HOME } else { $env:LOCALAPPDATA }
@@ -98,6 +96,7 @@ _reset-windows:
   $nvimDir = "${cfg}\nvim"
   $nvimData = "${dataDir}\nvim-data"
   $nvimCache = "${cacheDir}\nvim"
+  echo "nvimDir: $nvimDir | nvimData: $nvimData | nvimCache: $nvimCache" 
   #
   $nvCustom = "${cfg}\{{configPath}}\main"
   $nvCustomData = "${dataDir}\{{configPath}}\main"
