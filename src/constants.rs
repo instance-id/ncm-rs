@@ -71,7 +71,7 @@ pub const INFO_CONFIGS_ADDED: &str = "Added new config";
 pub const INFO_CONFIGS_LOADING: &str = "Loading";
 pub const INFO_CONFIG_PATH: &str = "Please enter a path in which to store your configurations";
 pub const INFO_CONFIG_NAME: &str = "Please enter a name for your configuration";
-pub const INFO_CONFIG_PATH_PLACEHOLDER: &str = "Press enter to use default (~/.config/nvim-ncm)";
+pub const INFO_CONFIG_PATH_PLACEHOLDER: &str = "Press enter to use default";
 pub const INFO_CONFIG_NAME_PLACEHOLDER: &str = "Press enter to use default";
 
 pub const INFO_DIR_CACHE: &str = "Creating cache directory: ";
