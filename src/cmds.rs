@@ -81,8 +81,8 @@ pub(crate) fn add_config(name: &str, path: &Path, description: &Option<String>, 
 // --|--------------------------------------
 pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard<Settings>) {
     let nvim_path = PathBuf::from(settings.nvim_path.to_str().unwrap());
-    let nvim_data = settings.base_paths.local.clone().join(NVIM);
-    let nvim_cache = settings.base_paths.cache.clone().join(NVIM);
+    let nvim_data = settings.data_path.clone();
+    let nvim_cache = settings.cache_path.clone();
     let name_str = name.to_owned().unwrap();
 
     let config_json = settings.configs_path.to_str().unwrap();
