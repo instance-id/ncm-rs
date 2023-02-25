@@ -30,7 +30,6 @@ When you select a configuration using the load option, it will be symlinked to t
 
 > **Note**
 > An automated backup and setup process has been added.
-> Now symlinks both `~/.config/nvim` and `~/.local/share/nvim` to the selected configuration.
 
 ### Update Notes
 
@@ -39,7 +38,7 @@ When you select a configuration using the load option, it will be symlinked to t
 <details open>
 <summary>0.0.6</summary>
 
-* Now symlinks both `~/.config/nvim` and `~/.local/share/nvim` to the selected configuration. Stores separate data directory for each configuration.  
+* Each configuration now has it's own `~/.config/nvim` and `~/.local/share/nvim` directories, avoiding any complications when a configuration uses a different nvim package manager, or conflicting versions of plugins. 
 * Enhanced Windows support (detects XDG_CONFIG_HOME and XDG_DATA_HOME and acts accordingly, else uses $LOCALAPPDATA)  
 
 </details>
