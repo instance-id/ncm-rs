@@ -13,6 +13,7 @@ set windows-shell := ["pwsh.exe","-NoLogo", "-noprofile", "-c"]
 newExe := "ncm"
 originalExe := "ncm-rs"
 configPath := "nvim-ncm"
+dataPath := "nvim-ncm-data"
 targetPath := "./target/release/"
 releasePath := "./target/release/ncm"
 installPath :=  "/.local/bin/"
@@ -84,35 +85,74 @@ _reset-linux:
   rm -rf "$HOME/.local/share/nvim-ncm" || true
 
   rm -rf $HOME/.config/ncm-rs || true
+  /home/mosthated/_dev/languages/pwsh/file_sync/code_sync.ps1 /mnt/x/GitHub/instance-id/rust/ncm-rs
   echo "Reset Complete! {{configPath}}"
+# @formatter:on
 
-# --| Windows
 _reset-windows:
-  #!{{shebang}}
-  $cfg = if($env:XDG_CONFIG_HOME -ne $null) { $env:XDG_CONFIG_HOME } else { $env:LOCALAPPDATA }
-  $dataDir = if($env:XDG_DATA_HOME -ne $null) { $env:XDG_DATA_HOME } else { $env:LOCALAPPDATA }
-  $cacheDir = if($env:XDG_CACHE_HOME -ne $null) { $env:XDG_CACHE_HOME } else { $env:LOCALAPPDATA }
-  #
-  $nvimDir = "${cfg}\nvim"
-  $nvimData = "${dataDir}\nvim-data"
-  $nvimCache = "${cacheDir}\nvim"
-  echo "nvimDir: $nvimDir | nvimData: $nvimData | nvimCache: $nvimCache" 
-  #
-  $nvCustom = "${cfg}\{{configPath}}\main"
-  $nvCustomData = "${dataDir}\{{configPath}}\main"
-  $nvCustomCache = "${cacheDir}\{{configPath}}\main"
-  #
-  if (Get-Item -Path "${nvimDir}" | Select-Object -ExpandProperty LinkType) { rm $nvimDir } else {return}
-  if (Get-Item -Path "${$nvimData}" | Select-Object -ExpandProperty LinkType) { rm $nvimData } else {return}
-  if (Get-Item -Path "${$nvimCache}" | Select-Object -ExpandProperty LinkType) { rm $nvimCache } else {return}
-  #
-  if (test-path $nvCustom && !test-path "${nvimDir}") { mv "${nvCustom}" "${cfg}\\" }
-  if (test-path $nvCustomData && !test-path "${nvimData}") { mv "${nvCustomData}" "${nvimData}\\" }
-  if (test-path $nvCustomCache && !test-path "${nvimCache}") { mv "${nvCustomCache}" "${nvimCache}\\" }
-  #
-  rm -force -recurse "${cfg}\{{configPath}}"; 
-  rm -force -recurse "${cfg}\ncm-rs"; 
+  just _refresh-code
+  just _run-reset
   
+_refresh-code:
+  & C:\files\scripts\sync_code.ps1 Z:\code\rust\ncm-rs
+
+# @formatter:off
+# --| Windows
+_run-reset:
+  #!{{shebang}}
+  try {
+    $useLocal = if($null -ne $env:USE_LOCAL_PATH) { echo "Using Local Path"; [bool]::Parse($env:USE_LOCAL_PATH);  } else { $false }
+    $cfg      = if(($null -ne $env:XDG_CONFIG_HOME) -and !($useLocal)) { $env:XDG_CONFIG_HOME } else { $env:LOCALAPPDATA }
+    $dataDir  = if(($null -ne $env:XDG_DATA_HOME)   -and !($useLocal)) { $env:XDG_DATA_HOME   } else { $env:LOCALAPPDATA }
+    $cacheDir = if(($null -ne $env:XDG_CACHE_HOME)  -and !($useLocal)) { $env:XDG_CACHE_HOME  } else { $env:LOCALAPPDATA }
+    #
+    $nvimDir = "${cfg}/nvim"
+    $nvimData = "${dataDir}/nvim-data"
+    $nvimCache = "${cacheDir}/nvim"
+    echo "nvimDir: $nvimDir | nvimData: $nvimData | nvimCache: $nvimCache" 
+    #
+    $nvCustomDataDir = if ($useLocal) { "nvim-ncm-data" } else { "nvim-ncm" }
+    $nvCustom = "${cfg}/nvim-ncm/main"
+    $nvCustomData = "${dataDir}/${nvCustomDataDir}/main"
+    $nvCustomCache = "${cacheDir}/${nvCustomDataDir}/main"
+    echo "nvCustom: $nvCustom | nvCustomData: $nvCustomData | nvCustomCache: $nvCustomCache"    
+    # 
+    if ((test-path "${nvimDir}")   -and (Get-Item -Path "${nvimDir}"   | Select-Object -ExpandProperty LinkType)) { rm "${nvimDir}"   }
+    if ((test-path "${nvimData}")  -and (Get-Item -Path "${nvimData}"  | Select-Object -ExpandProperty LinkType)) { rm "${nvimData}"  }
+    if ((test-path "${nvimCache}") -and (Get-Item -Path "${nvimCache}" | Select-Object -ExpandProperty LinkType)) { rm "${nvimCache}" }
+    #
+    function renameDir([string]$dir,[string]$newName) {
+      $newPath = $dir.Split("/")[-1]
+      $newDir = "${dir}/$newName"
+      if (!(test-path $newPath)){
+        rename-item -path $dir -newname $newName
+      }
+    }
+    # @formatter:on 
+    if ((test-path "${nvCustom}") -and (!(test-path "${nvimDir}"))) { 
+        renameDir "${nvCustom}" 'nvim' 
+        mv "${cfg}/nvim-ncm/nvim" "${cfg}"
+        echo "Moved: ${nvCustom} to ${cfg}" 
+    }
+    #
+    if ((test-path "${nvCustomData}") -and (!(test-path "${nvimData}"))) {
+        renameDir "${nvCustomData}"  'nvim-data'
+        mv "${dataDir}/${nvCustomDataDir}/nvim-data"  "${dataDir}"
+        echo "Moved: ${nvCustomData} to ${nvimData}" 
+    }
+    #
+    if ((test-path "${nvCustomCache}") -and (!(test-path "${nvimCache}"))) { 
+        mv "${nvCustomCache}" "${nvimCache}" ; 
+        renameDir  ; 
+        echo "Moved: ${nvCustomCache} to ${nvimCache}"
+    }
+    # @formatter:off
+    if (test-path "${cfg}/nvim-ncm") { rm "${cfg}/nvim-ncm" -force -recurse; }
+    if (test-path "${cfg}/ncm-rs")   { rm "${cfg}/ncm-rs"   -force -recurse; } 
+  } catch { echo $_.Exception.Message; $_ > error.log }
+  
+# @formatter:on 
+
 # --| MacOS
 _reset-macos:
 

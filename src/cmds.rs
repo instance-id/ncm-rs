@@ -5,6 +5,8 @@ use log::{debug, error, info};
 use inquire::ui::RenderConfig;
 use std::path::{Path, PathBuf};
 use std::sync::RwLockWriteGuard;
+use ansi_term::ANSIGenericString;
+use spinners::{Spinner, Spinners};
 use prettytable::format::Alignment;
 use inquire::{Confirm, Select, Text};
 use clap::{command, Subcommand, Parser};
@@ -16,7 +18,6 @@ use crate::constants::*;
 use crate::settings::Settings;
 use crate::backup::create_backup;
 use crate::configs::{BackupInfo, ConfigData, Configs};
-use crate::paths::get_ncm_paths;
 
 #[derive(Parser)]
 #[command(name = "ncm")]
@@ -61,6 +62,11 @@ pub enum Commands {
 // --| Add ---------------------------------
 // --|--------------------------------------
 pub(crate) fn add_config(name: &str, path: &Path, description: &Option<String>, data_path: Option<String>, cache_path: Option<String>, config_json: &str) {
+    let mut data_path_buf = PathBuf::from(data_path.unwrap());
+    data_path_buf.push(name);
+    let data_path = Option::from(data_path_buf.to_str().unwrap().to_string());
+    let data_path_str = data_path.clone().unwrap();
+
     if configs::add_config(
         config_json,
         ConfigData {
@@ -71,7 +77,7 @@ pub(crate) fn add_config(name: &str, path: &Path, description: &Option<String>, 
             cache_path,
         },
     ).is_ok() {
-        info!("{}: {name:?} {path:?} {description:?}", INFO_CONFIGS_ADDED);
+        info!("{}: {name:?} {path:?} {description:?} {data_path_str:?} ", INFO_CONFIGS_ADDED);
     } else {
         error!("{}: {name:?} {path:?} {description:?}", ERR_CONFIGS_ADD);
     }
@@ -82,8 +88,10 @@ pub(crate) fn add_config(name: &str, path: &Path, description: &Option<String>, 
 pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard<Settings>) {
     let nvim_path = PathBuf::from(settings.nvim_path.to_str().unwrap());
     let nvim_data = settings.data_path.clone();
-    let nvim_cache = settings.cache_path.clone();
+    let _nvim_cache = settings.cache_path.clone();
     let name_str = name.to_owned().unwrap();
+    let xdg_config_set = settings.xdg_config_is_set;
+    let xdg_data_set = settings.xdg_data_is_set;
 
     let config_json = settings.configs_path.to_str().unwrap();
     let cfg = configs::load_configs(config_json, &name.clone().unwrap()).expect(ERR_CONFIGS_LOAD);
@@ -96,43 +104,44 @@ pub(crate) fn load_config(name: &Option<String>, settings: &mut RwLockWriteGuard
     let config_buf = config_path.unwrap();
     let cfg_str = config_buf.to_str().unwrap();
 
-    let mut data_buf = data_path.unwrap();
-    data_buf.push(&name_str);
+    let data_buf = data_path.unwrap();
     let data_str = data_buf.to_str().unwrap();
 
-    let mut cache_buf = cache_path.unwrap();
-    cache_buf.push(&name_str);
-    let cache_str = cache_buf.to_str().unwrap();
+    let cache_buf = cache_path.unwrap();
+    let _cache_str = cache_buf.to_str().unwrap();
 
-    if verify_config_directory(&nvim_path, &config_buf).is_ok() {
+    if verify_config_directory(&nvim_path, &config_buf, xdg_config_set).is_ok() {
         debug!("{}: {:?} - {}: {}", "System Config Path: ", nvim_path, "Config Path: ", cfg_str);
         configs::create_symlink(nvim_path, config_buf).expect(ERR_SYMLINK_CREATE);
     } else {
         return error!("{}: {:?} - {}: {}", "System Config Path: ", nvim_path, "Config Path: ", cfg_str);
     }
 
-    if verify_data_directory(&nvim_data, &data_buf, &name_str).is_ok() {
+    if verify_data_directory(&nvim_data, &data_buf, &name_str, xdg_data_set).is_ok() {
         debug!("{}: {:?} - {}: {}", "System Data Path:   ", nvim_data, "Data Path:   ", data_str);
         configs::create_symlink(nvim_data, data_buf).expect(ERR_SYMLINK_CREATE);
     } else {
-       return error!("{}: {:?} - {}: {}", "System Data Path:   ", nvim_data, "Data Path:   ", data_str);
+        return error!("{}: {:?} - {}: {}", "System Data Path:   ", nvim_data, "Data Path:   ", data_str);
     }
 
     // --| Not handling cache on Windows ---
-    if cfg!(target_os = "windows") { return; }
-    if verify_cache_path(&nvim_cache, &cache_buf, &name_str).is_ok() {
-        debug!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
-        configs::create_symlink(nvim_cache, cache_buf).expect(ERR_SYMLINK_CREATE);
-    } else {
-        error!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
-    }
+    if cfg!(target_os = "windows") {}
+    // if verify_cache_path(&nvim_cache, &cache_buf, &name_str).is_ok() {
+    //     debug!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
+    //     configs::create_symlink(nvim_cache, cache_buf).expect(ERR_SYMLINK_CREATE);
+    // } else {
+    //     error!("{}: {:?} - {}: {}", "System Cache Path:  ", nvim_cache, "Cache Path: ", cache_str);
+    // }
 }
 
 // --| Verify Original Config Directory ---------
-fn verify_config_directory(nvim_path: &Path, new_path: &PathBuf) -> Result<()> {
-    if !nvim_path.ends_with(NVIM) && !nvim_path.parent().unwrap().ends_with(CONFIG) {
-        return Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?;
-    }
+fn verify_config_directory(nvim_path: &Path, new_path: &PathBuf, xdg_config_set: bool) -> Result<()> {
+    if !nvim_path.ends_with(NVIM) && !nvim_path.parent().unwrap().ends_with(
+        match cfg!(target_os = "windows") {
+            true => if !xdg_config_set { NCM_DATA_WIN } else { CONFIG },
+            false => CONFIG,
+        }
+    ) { return Err(anyhow!("{}: {:?}", ERR_DIR_CONFIG_VERIFICATION, new_path))?; }
 
     let file_one = new_path.join(INIT_LUA);
     let file_two = new_path.join(INIT_VIM);
@@ -144,23 +153,25 @@ fn verify_config_directory(nvim_path: &Path, new_path: &PathBuf) -> Result<()> {
 }
 
 // --| Verify Original Data Directory -----------
-fn verify_data_directory(nvim_data: &PathBuf, new_path: &PathBuf, name: &str) -> Result<()> {
-    if !nvim_data.exists() {
-        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
-    }
+fn verify_data_directory(nvim_data: &PathBuf, new_path: &PathBuf, name: &str, xdg_data_set: bool) -> Result<()> {
+    if !nvim_data.exists() { return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?; }
 
-    if !nvim_data.ends_with(NVIM) && !nvim_data.parent().unwrap().ends_with(SHARE) {
-        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?;
-    }
+    if !nvim_data.ends_with(if cfg!(target_os = "windows") { NVIM_DATA } else { NVIM }) &&
+        !nvim_data.parent().unwrap().ends_with(
+            match cfg!(target_os = "windows") {
+                true => if !xdg_data_set { WIN_DATA } else { SHARE },
+                false => SHARE,
+            }
+        ) { return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, nvim_data))?; }
 
-    if !new_path.ends_with(name) && !new_path.parent().unwrap().ends_with(NCM_DATA) {
-        return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?;
-    }
+    if !new_path.ends_with(name) && !new_path.parent().unwrap().ends_with(
+        if cfg!(target_os = "windows") && !xdg_data_set { NCM_DATA_WIN } else { NCM_DATA }
+    ) { return Err(anyhow!("{}: {:?}", ERR_DIR_DATA_VERIFICATION, new_path))?; }
     Ok(())
 }
 
 // --| Verify Original Cache Path ---------------
-fn verify_cache_path(nvim_cache: &PathBuf, new_path: &PathBuf, name: &str) -> Result<()> {
+fn _verify_cache_path(nvim_cache: &PathBuf, new_path: &PathBuf, name: &str) -> Result<()> {
     if !nvim_cache.exists() {
         return Err(anyhow!("{}: {:?}", ERR_DIR_CACHE_VERIFICATION, nvim_cache))?;
     }
@@ -249,10 +260,14 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
         // --| Backup original and move to new location
         return if let Ok(backup_info) = backup_original(settings) {
             let mut nvim_tmp = PathBuf::new();
+            let mut nvim_data = PathBuf::new();
             let name = backup_info.name.as_str();
+            nvim_data.push(&settings.ncm_paths.local);
+            nvim_data.push(name);
+
             let description: Option<String> = Some(DEFAULT_CONFIG_DESC.to_owned());
-            let data_path: Option<String> = Some(settings.data_path.to_str().unwrap().to_string());
-            let cache_path: Option<String> = Some(settings.cache_path.to_str().unwrap().to_string());
+            let data_path: Option<String> = Some(nvim_data.to_str().unwrap().to_string());
+            let cache_path: Option<String> = Some(settings.ncm_paths.cache.to_str().unwrap().to_string());
 
             nvim_tmp.push(backup_info.path.as_str());
             nvim_tmp.push(backup_info.name.as_str());
@@ -284,7 +299,7 @@ pub(crate) fn check_setup(settings: &mut RwLockWriteGuard<'_, Settings>, setup_c
             }
             Ok(())
         } else {
-           Err(anyhow!("{}", ERR_NOT_COMPLETE))
+            Err(anyhow!("{}", ERR_NOT_COMPLETE))
         };
     } else {
         settings.check_directories().expect("Error creating directories");
@@ -335,7 +350,7 @@ fn backup_selected(settings: &&mut RwLockWriteGuard<Settings>, configs: &Configs
     let mut backup_path = PathBuf::new();
     let mut backup_source = PathBuf::new();
 
-    backup_path.push(&settings.ncm_path);
+    backup_path.push(&settings.ncm_cfg_path);
     backup_path.push(BACKUPS);
 
     if !backup_path.exists() {
@@ -380,10 +395,9 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
         return Err(anyhow!(ERR_BACKUP_MANUALLY));
     }
 
-    let default_paths = get_ncm_paths(settings);
     let mut backup_info = BackupInfo {
         name: NCM_DATA.to_string(),
-        path: default_paths.config.to_str().unwrap().to_string(),
+        path: settings.ncm_paths.config.to_str().unwrap().to_string(),
     };
 
     let nvim_config_path = Text {
@@ -416,7 +430,7 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
         let mut backup_path = PathBuf::new();
         let mut backup_file = PathBuf::new();
 
-        backup_path.push(&settings.ncm_path);
+        backup_path.push(&settings.ncm_cfg_path);
         backup_path.push(BACKUPS);
 
         if !backup_path.exists() {
@@ -437,7 +451,7 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
         info!("{} {}\n", creating_backup_path, backup_file.to_str().unwrap());
 
         // --| Perform Backup -------------------
-        perform_backup(&settings.nvim_path, new_config_path, &backup_file, &nvim_config_name)?;
+        perform_backup(settings, new_config_path, &backup_file, &nvim_config_name)?;
 
         let mut init_lua = PathBuf::new();
         init_lua.push(new_config_path);
@@ -462,33 +476,110 @@ fn backup_original(settings: &mut RwLockWriteGuard<Settings>) -> Result<BackupIn
 }
 
 // --| Perform Backup -----------------------------
-pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_path: &Path, name: &str) -> Result<()> {
-    match create_backup(nvim_path, backup_path) {
+pub(crate) fn perform_backup(settings: &mut RwLockWriteGuard<Settings>, new_config_path: &String, backup_path: &Path, name: &str) -> Result<()> {
+    match create_backup(settings.nvim_path.as_path(), backup_path) {
         Ok(_) => {
             if backup_path.exists() {
                 let backup_success = RGB(146, 181, 95).paint(INFO_BACKUP_COMPLETE);
 
                 info!("{}\n", backup_success);
-                info!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path);
 
-                std::fs::create_dir_all(new_config_path)?;
-
-                let mut rename_original = PathBuf::from(new_config_path);
-                rename_original.push(NVIM);
-
-                let mut rename_path = PathBuf::from(new_config_path);
-                rename_path.push(name);
-
-                #[cfg(not(target_os = "windows"))]
-                {
-                    move_dir(nvim_path, new_config_path, &CopyOptions::new().copy_inside(true))?;
-                    std::fs::rename(rename_original, rename_path)?;
+                // --| Create NCM Config Directory ------------------
+                if !Path::new(new_config_path).exists() {
+                    match std::fs::create_dir_all(new_config_path) {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("{}: {:?}", ERR_CREATE_CONFIG_DIR, e);
+                            return Err(anyhow!("{}: {e}",ERR_CREATE_CONFIG_DIR));
+                        }
+                    }
                 }
 
-                #[cfg(target_os = "windows")]
+                // --| Create NCM Data Directory --------------------
+                if !&settings.ncm_paths.local.exists() {
+                    match std::fs::create_dir_all(&settings.ncm_paths.local) {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("{}: {:?}", ERR_CREATE_DATA_DIR, e);
+                            return Err(anyhow!("{}: {e}",ERR_CREATE_DATA_DIR));
+                        }
+                    }
+                }
+
+                let mut rename_path = PathBuf::from(new_config_path);
+                let mut rename_original = PathBuf::from(new_config_path);
+                let mut new_data_path = PathBuf::from(&settings.ncm_paths.local);
+                let mut rename_data_path = PathBuf::from(&settings.ncm_paths.local);
+
+                rename_path.push(name);
+                new_data_path.push(name);
+                rename_original.push(NVIM);
+                rename_data_path.push(settings.nvim_paths.local.file_name().unwrap());
+
+                let mut sp: Spinner;
+
+                if cfg!(not(target_os = "windows"))
                 {
-                    fs_extra::copy_items(&[nvim_path], new_config_path, &CopyOptions::new().copy_inside(true))?;
-                    std::fs::rename(rename_original, rename_path)?;
+                    // --| Copy Original Config to New Config Path -------
+                    sp = Spinner::new(Spinners::Dots12, format!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path));
+
+                    match move_dir(&settings.nvim_path, new_config_path, &CopyOptions::new().copy_inside(true)) {
+                        Ok(_) => {
+                            sp.stop_and_persist("✔", INFO_MOVING_ORIGINAL_COMPLETE.into());
+                            std::fs::rename(&rename_original, &rename_path).expect(ERR_DIR_DATA_RENAME);
+                        }
+                        Err(e) => {
+                            sp.stop_and_persist("✘", FAILED.into());
+                            return Err(anyhow!("{}: {e}", ERR_COPY_CONFIG_DIR));
+                        }
+                    }
+
+                    // --| Copy Data to New Data Path --------------------
+                    if !&new_data_path.exists() { std::fs::create_dir_all(&new_data_path).expect("Failed to create new data path"); }
+                    sp = Spinner::new(Spinners::Dots12, format!("{}: {:?}", INFO_MOVING_DATA, new_data_path));
+
+                    // --| Had to make a custom copy function because move_dir() and 
+                    // --| fs_extra::copy_items() were erroring on tree-sitter symlinks
+                    match copy_recursively(&settings.nvim_paths.local, &new_data_path) {
+                        Ok(_) => {
+                            sp.stop_and_persist(&green_text("✔"), INFO_MOVING_DATA_COMPLETE.into());
+                        }
+                        Err(e) => {
+                            sp.stop_and_persist(&red_text("✘"), FAILED.into());
+                            return Err(anyhow!("{}: {e}", ERR_COPY_DATA_DIR));
+                        }
+                    }
+                }
+
+                if cfg!(target_os = "windows")
+                {
+                    // --| Copy Original Config to New Config Path -------
+                    sp = Spinner::new(Spinners::Dots12, format!("{}: {:?}", INFO_MOVING_ORIGINAL, new_config_path));
+
+                    match fs_extra::copy_items(&[&settings.nvim_path], new_config_path, &CopyOptions::new().copy_inside(true)) {
+                        Ok(_) => {
+                            sp.stop_and_persist(&green_text("✔"), INFO_MOVING_ORIGINAL_COMPLETE.into());
+                            std::fs::rename(rename_original, rename_path).expect(ERR_DIR_DATA_RENAME);
+                        }
+                        Err(e) => {
+                            sp.stop_and_persist(&red_text("✘"), FAILED.into());
+                            return Err(anyhow!("{}: {e}", ERR_COPY_CONFIG_DIR));
+                        }
+                    }
+
+                    // --| Copy Data to New Data Path --------------------
+                    if !&new_data_path.exists() { std::fs::create_dir_all(&new_data_path).expect("Failed to create new data path"); }
+                    sp = Spinner::new(Spinners::Dots12, format!("{}: {:?}", INFO_MOVING_DATA, new_data_path));
+
+                    match copy_recursively(&settings.nvim_paths.local, &new_data_path) {
+                        Ok(_) => {
+                            sp.stop_and_persist(&green_text("✔"), INFO_MOVING_DATA_COMPLETE.into());
+                        }
+                        Err(e) => {
+                            sp.stop_and_persist(&red_text("✘"), FAILED.into());
+                            return Err(anyhow!("{}: {e}", ERR_COPY_DATA_DIR));
+                        }
+                    }
                 }
             } else {
                 error!("{}", ERR_BACKUP_CREATE);
@@ -502,4 +593,52 @@ pub(crate) fn perform_backup(nvim_path: &Path, new_config_path: &String, backup_
     }
 
     Ok(())
+}
+
+// --| Based on https://nick.groenen.me/notes/recursively-copy-files-in-rust/
+/// Copy files from source to destination recursively.
+pub fn copy_recursively(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> std::io::Result<()> {
+    std::fs::create_dir_all(&destination)?;
+    for entry in std::fs::read_dir(source)? {
+        let entry = entry?;
+        let filetype = entry.file_type()?;
+
+        if filetype.is_symlink() { continue; }
+
+        if filetype.is_dir() {
+            match copy_recursively(entry.path(), destination.as_ref().join(entry.file_name())) {
+                Ok(_) => {
+                    debug!("{}: {:?}", INFO_MOVING_DATA, &destination.as_ref().join(entry.file_name()));
+                }
+                Err(e) => {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("{}: {} {:?}", ERR_COPY_DATA_DIR, &entry.path().to_str().unwrap(), e))
+                    );
+                }
+            }
+        } else {
+            match std::fs::copy(entry.path(), destination.as_ref().join(entry.file_name())) {
+                Ok(_) => {
+                    debug!("{}: {:?}", INFO_MOVING_DATA, &destination.as_ref().join(entry.file_name()));
+                }
+                Err(e) => {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("{}: {} {:?}", ERR_COPY_DATA_FILE, &entry.path().to_str().unwrap(), e))
+                    );
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+// --| Helper Functions -----------------------------------
+fn green_text(text: &str) -> ANSIGenericString<str> {
+    RGB(146, 181, 95).paint(text)
+}
+
+fn red_text(text: &str) -> ANSIGenericString<str> {
+    RGB(253, 53, 49).paint(text)
 }

@@ -27,6 +27,13 @@ pub const APP_DATA_LOCAL_PATH: &str = "\\AppData\\Local";
 pub const NCM: &str = "ncm";
 pub const SETUP_COMPLETE: &str = "setup_complete";
 
+// --| Symbols and Notations -----
+pub const CHECK: &str = "✔";    
+pub const CROSS: &str = "✘";
+pub const FAILED: &str = "Failed";
+pub const COMPLETE: &str = "Complete";
+
+ 
 // --| Directory and File Names --
 pub const DATA: &str = ".local";
 pub const SHARE: &str = "share";
@@ -38,17 +45,19 @@ pub const WIN_DATA: &str = "Local";
 pub const ZIP: &str = "zip";
 pub const MAIN: &str = "main";
 pub const NVIM: &str = "nvim";
-pub const NCM_DIR: &str = "ncm-rs";
 pub const INIT_LUA: &str = "init.lua";
 pub const INIT_VIM: &str = "init.vim";
 pub const NVIM_DATA: &str = "nvim-data";
 
+pub const NCM_DIR: &str = "ncm-rs";
+pub const NCM_DATA: &str = "nvim-ncm";
+pub const NCM_DATA_WIN: &str = "nvim-ncm-data";
+
 pub const BACKUPS: &str = "backups";
 pub const BACKUP_PATH: &str = "backup_path";
 pub const CONFIGS_FILE: &str = "configs.json";
-pub const NCM_DATA: &str = "nvim-ncm";
 pub const SETTINGS_FILE: &str = "settings.ini";
-
+pub const LOADING_SPINNER: &str = "Dots12";
 
 // --| CLI Commands --------------
 pub const CLI_SPACER: &str = " ";
@@ -79,6 +88,9 @@ pub const INFO_DIR_DATA: &str = "Creating data directory: ";
 
 pub const INFO_NEW_SETUP: &str = "New setup detected, creating configuration directories and settings files";
 pub const INFO_MOVING_ORIGINAL: &str = "Moving original config to";
+pub const INFO_MOVING_ORIGINAL_COMPLETE: &str = "Moving original config complete";
+pub const INFO_MOVING_DATA: &str = "Moving original data to";
+pub const INFO_MOVING_DATA_COMPLETE: &str = "Moving original data complete";
 pub const INFO_SELECT_ALL: &str = "all";
 pub const INFO_SETUP_COMPLETE: &str = "Setup complete!";
 
@@ -106,8 +118,18 @@ pub const ERR_CONFIGS_PARSE: &str = "Could not parse configurations from configs
 pub const ERR_CONFIGS_READ: &str = "Could not read configurations from configs.json";
 pub const ERR_CONFIGS_WRITE: &str = "Failed to write configuration to disk";
 
+pub const ERR_CREATE_CONFIG_DIR: &str = "Could not create config directory";
+pub const ERR_CREATE_DATA_DIR: &str = "Could not create data directory";
+
+pub const ERR_COPY_CONFIG_DIR: &str = "There was an error while copying the config directory";
+pub const ERR_COPY_CONFIG_FILE: &str = "There was an error while copying the config file";
+pub const ERR_COPY_DATA_DIR: &str = "There was an error while copying the data directory";
+pub const ERR_COPY_DATA_FILE: &str = "There was an error while copying the data file";
+
 pub const ERR_DIR_UCREATE: &str = "Unable to create directories";
+pub const ERR_DIR_CONFIG_RENAME: &str = "Failed to rename original config to new config directory";
 pub const ERR_DIR_DATA: &str = "Could not create data directory";
+pub const ERR_DIR_DATA_RENAME: &str = "Failed to rename original data to new data directory";
 pub const ERR_DIR_CACHE: &str = "Could not create cache directory";
 pub const ERR_DIR_CONFIG_VERIFICATION: &str = "No init.lua or init.vim found in new config path";
 pub const ERR_DIR_DATA_VERIFICATION: &str = "Data directory path is not correct";

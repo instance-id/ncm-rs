@@ -44,8 +44,8 @@ fn main() -> Result<()> {
     }
 
     let config_json = &settings.configs_path.to_str().unwrap().to_string();
-    let data_path = Option::from(settings.data_path.to_str().unwrap().to_string());
-    let cache_path = Option::from(settings.cache_path.to_str().unwrap().to_string());
+    let data_path = Option::from(settings.ncm_paths.local.to_str().unwrap().to_string());
+    let cache_path = Option::from(settings.ncm_paths.cache.to_str().unwrap().to_string());
 
     // --| Parse Arguments -----------------
     let args = NvCfgArgs::parse();

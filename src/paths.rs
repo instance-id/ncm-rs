@@ -6,9 +6,13 @@ use crate::settings::Settings;
 
 #[derive(Clone, Debug)]
 pub struct GenericPaths {
+    /// .config or %LOCALAPPDATA%
     pub config: PathBuf,
+    /// .local/share or %LOCALAPPDATA%
     pub local: PathBuf,
+    /// .cache or %TEMP%
     pub cache: PathBuf,
+    /// .local/state or %LOCALAPPDATA%
     pub state: PathBuf,
 }
 
@@ -46,63 +50,47 @@ impl Default for EnvVariables {
     }
 }
 
-pub(crate) fn get_base_paths(settings: &mut Settings) -> &mut Settings {
+pub(crate) fn get_base_paths(settings: &mut Settings) -> GenericPaths {
     create_paths(settings)
 }
 
-pub(crate) fn get_named_paths(name: &str, settings: &mut Settings) -> GenericPaths {
-    let settings = get_base_paths(settings);
-    let mut config = settings.base_paths.config.clone();
-    let mut local = settings.base_paths.local.clone();
-    let mut cache = settings.base_paths.cache.clone();
-    let mut state = settings.base_paths.state.clone();
-
-    config.push(NCM_DATA);
-    config.push(name);
-
-    local.push(NCM_DATA);
-    local.push(name);
-
-    cache.push(NCM_DATA);
-    cache.push(name);
-
-    state.push(NCM_DATA);
-    state.push(name);
-
-    GenericPaths { config, local, cache, state }
-}
-
-pub(crate) fn get_nvim_paths(settings: &Settings) -> GenericPaths {
+// --| Nvim Paths are the default locations for Neovim ----
+pub(crate) fn get_nvim_paths(settings: &mut Settings) -> GenericPaths {
     let base_paths = &settings.base_paths.clone();
     let mut config = base_paths.config.clone();
     let mut local = base_paths.local.clone();
     let mut cache = base_paths.cache.clone();
     let mut state = base_paths.state.clone();
 
+    let data_dir = if cfg!(target_os = "windows") { NVIM_DATA } else { NVIM };
+
     config.push(NVIM);
-    local.push(if cfg!(target_os = "windows") { NVIM_DATA } else { NVIM });
+    local.push(data_dir);
     cache.push(NVIM);
     state.push(NVIM);
 
     GenericPaths { config, local, cache, state }
 }
 
-pub(crate) fn get_ncm_paths(settings: &Settings) -> GenericPaths {
+// --| Ncm Paths are the modified destination paths -------
+pub(crate) fn get_ncm_paths(settings: &mut Settings) -> GenericPaths {
     let base_paths = &settings.base_paths.clone();
     let mut config = base_paths.config.clone();
     let mut local = base_paths.local.clone();
     let mut cache = base_paths.cache.clone();
     let mut state = base_paths.state.clone();
 
+    let data_dir = if cfg!(target_os = "windows") && !settings.xdg_data_is_set { NCM_DATA_WIN } else { NCM_DATA };
+
     config.push(NCM_DATA);
-    local.push(NCM_DATA);
+    local.push(data_dir);
     cache.push(NCM_DATA);
     state.push(NCM_DATA);
 
     GenericPaths { config, local, cache, state }
 }
 
-fn create_paths(settings: &mut Settings) -> &mut Settings {
+fn create_paths(settings: &mut Settings) -> GenericPaths {
     let config: PathBuf;
     let local: PathBuf;
     let cache: PathBuf;
@@ -119,19 +107,19 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
                 config = PathBuf::from(value);
                 settings.xdg_config_is_set = true;
                 debug!("Windows: using XDG_CONFIG_HOME as base path: {:?}", config);
-            },
+            }
             Err(_) => {
                 config = win_path.clone();
                 debug!("Windows: using APPDATA_LOCAL as base path: {:?}", config);
             }
         }
-        
+
         match var(&settings.env_vars.xdg_data_home) {
             Ok(value) => {
                 local = PathBuf::from(value);
                 settings.xdg_data_is_set = true;
                 debug!("Windows: using XDG_DATA_HOME as base path: {:?}", local);
-            },
+            }
             Err(_) => {
                 local = win_path.clone();
                 debug!("Windows: using APPDATA_LOCAL as base path: {:?}", local);
@@ -145,7 +133,6 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
         state = PathBuf::from(var(&settings.env_vars.xdg_state_home).unwrap_or_else(|_| {
             win_path.to_str().unwrap().to_string()
         }));
-        
     } else {
         config = PathBuf::from(var(&settings.env_vars.xdg_config_home).unwrap_or_else(|_| {
             var(&settings.env_vars.home).unwrap() + XDG_CONFIG_HOME_PATH
@@ -163,6 +150,6 @@ fn create_paths(settings: &mut Settings) -> &mut Settings {
             var(&settings.env_vars.home).unwrap() + XDG_STATE_HOME_PATH
         }));
     }
-    settings.base_paths = GenericPaths { config, local, cache, state };
-    settings
+
+    GenericPaths { config, local, cache, state }
 }

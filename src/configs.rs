@@ -72,13 +72,12 @@ pub(crate) fn load_configs(config_path: &str, config_name: &str) -> Result<Confi
 // Using config_path as the json file location, and ConfigData struct as input, write the data to the json file.
 pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> Result<()> {
     let config_file = std::fs::read_to_string(config_path).expect(ERR_READ_FILE);
-    let name = &config_data.name.clone();
+    let _name = &config_data.name.clone();
 
     // --| Create .local data path for config ---
     let data_path = &config_data.data_path.clone();
     if data_path.is_some() {
-        let mut path = PathBuf::from(data_path.as_ref().unwrap());
-        path.push(name);
+        let path = PathBuf::from(data_path.as_ref().unwrap());
 
         if !path.exists() {
             info!("{}: {}", INFO_DIR_DATA, path.to_str().unwrap());
@@ -90,8 +89,7 @@ pub(crate) fn add_config(config_path: &str, config_data: ConfigData) -> Result<(
     if !cfg!(target_os = "windows") {
         let cache_path = &config_data.cache_path;
         if cache_path.is_some() {
-            let mut path = PathBuf::from(cache_path.as_ref().unwrap());
-            path.push(name);
+            let path = PathBuf::from(cache_path.as_ref().unwrap());
 
             if !path.exists() {
                 info!("{}: {}", INFO_DIR_CACHE, path.to_str().unwrap());
