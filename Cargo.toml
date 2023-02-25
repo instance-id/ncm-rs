@@ -1,6 +1,6 @@
 [package]
 name = "ncm-rs"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
 description = "Neovim configuration manager written in Rust"
 repository = "https://github.com/instance-id/ncm-rs"
